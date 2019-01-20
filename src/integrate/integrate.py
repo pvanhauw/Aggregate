@@ -152,8 +152,6 @@ Plot data
 '''
 def main(): 
     parser = argparse.ArgumentParser(description='Read tecplot file and extract zone as dataframe. Plot data', formatter_class=RawTextHelpFormatter)
-    #parser.add_argument("-i", "--inputFiles", nargs='+', help="tecplot file intput",  required = True ) 
-    #parser.add_argument("-noconcat", "--noconcatenate", help="dont concatenate zone together",action="store_true") 
     parser.add_argument("-i", "--list_input", help="list of files" ,  nargs='+', type = str , default = [] ,   required = True  )  
     parser.add_argument("-f", "--forceFormat"   , help="force the reader" , type = str , default = "") 
     parser.add_argument("-o", "--outPutName"   , help="default bae name for output" , type = str , default = "output") 
@@ -171,17 +169,8 @@ def main():
     parser.add_argument("-reverse_aero_convention", "--reverse_aero_convention", help="reverse normal (multiply all by -1)",action="store_true") 
     
     args = parser.parse_args()
-    #noconcatenate = args.noconcatenate
     list_input = args.list_input
     forceFormat = args.forceFormat
-    '''
-    #absolutePath =  "/home/pierre/Ysee/directions-fine.vtk"
-    absolutePath =  "/home/pierre/Ysee/SRF/vtu/thermo-surface-1.plt.vtu"
-    absolutePath =  "/home/pierre/Ysee/core-F1000-0.vtu"
-
-    forceFormat = ""
-    
-    '''
     cwd= os.getcwd()
     for relativePath in list_input :
         absolutePath = os.path.join(cwd, relativePath)
@@ -204,7 +193,7 @@ def main():
     print("used reverse_normal : %s"%args.reverse_normal )
     
     verbose = True
-    xcog, ycog, zcog = 0. ,0. ,2. 
+    xcog, ycog, zcog = 0. ,0. ,2.  # TODO addd to parser
     config = Config(
         xcog, ycog, zcog,
         args.alpha_deg, args.beta_deg, 
@@ -474,16 +463,8 @@ def integrate(polyData, config ):
         print(x)
     print(df_integration)
     # save 
-    '''
-    outputname = os.path.join( os.getcwd() , 'output.xlsx' )
-    print ("save df in %s"%outputname)
-    writer = pd.ExcelWriter(outputname ) 
-    df_integration.to_excel(writer,'Sheet1')
-    writer.save()
-    '''
-    
-    # csv 
     file_name = os.path.join( os.getcwd() , config.outPutName+".csv" )
+    # csv 
     #df_integration.to_csv(file_name, sep=';', encoding='utf-8')
     # csv lin style 
     df_integration_lin = ConcateRow(df_integration , config )
@@ -493,10 +474,8 @@ def getPolyDataByLoadingFile( absolutePathName, fileExtention,  verbose = False 
         # test if file exists
         if not os.path.isfile(absolutePathName):
             raise Exception('File {:s} does not exist'.format(absolutePathName))
-
         # Get extension
         basename = os.path.basename(absolutePathName)
-        
         if fileExtention == "": 
             splitname = basename.split(".")
             if len(splitname) < 2:
@@ -505,7 +484,6 @@ def getPolyDataByLoadingFile( absolutePathName, fileExtention,  verbose = False 
             fileExtention = splitname[-1]
         else :
             print("FORCED using file extension: {:s}".format(absolutePathName) ) 
-            
         # Select reader
         if fileExtention == 'ply':
             reader = vtk.vtkPLYReader()
@@ -534,18 +512,12 @@ def getPolyDataByLoadingFile( absolutePathName, fileExtention,  verbose = False 
         output = dsSurfaceFilt.GetOutput()
         return output
         
-        
 def Launch(input , VARIABLE) : 
     input.GetCellData().SetActiveScalars(VARIABLE)
-    
     mapMesh = vtk.vtkDataSetMapper()
     #mapMesh = vtk.vtkPolyDataMapper()
     mapMesh.SetInputData(input)
     #mapMesh.SetInputConnection(input)
-    '''
-    for x in dir(input) :
-        print(x)
-    '''
     
     mapMesh.SetScalarRange(input.GetCellData().GetArray(VARIABLE).GetRange())
     mapMesh.SetScalarModeToUseCellData()
@@ -564,7 +536,7 @@ def Launch(input , VARIABLE) :
     # Add the actors to the renderer, set the background and size
     ren.AddActor(meshActor)
     ren.SetBackground(0, 0, 0)
-    renWin.SetSize(800, 600)
+    renWin.SetSize(1650, 1050)
  
     ren.ResetCamera()
     ren.GetActiveCamera().Zoom(1)
@@ -573,8 +545,6 @@ def Launch(input , VARIABLE) :
     renWin.Render()
     iren.Start()
         
-        
 main()
-        
         
         

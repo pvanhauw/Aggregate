@@ -3,7 +3,6 @@ Created on Jan 19, 2019
 
 @author: pierre
 '''
-
 # https://docs.python.org/2/library/operator.html 
 
 import math
@@ -69,41 +68,5 @@ class Point(object):
     def Norm(self):
         tmp = self.x * self.x + self.y * self.y + self.z * self.z
         return math.sqrt(tmp)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     

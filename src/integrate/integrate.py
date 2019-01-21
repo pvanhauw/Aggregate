@@ -9,7 +9,6 @@ import argparse
 from argparse import RawTextHelpFormatter
 import vtk 
 #from geometry.Point import Point
-import time
 import numpy as np
 
 from vtk.util.numpy_support import numpy_to_vtk, vtk_to_numpy
@@ -27,7 +26,6 @@ class CellOrientationXYZ:
     labels[Z_MINUS] = "minusZ"
     labels[Z_PLUS]  = "plusZ"
             
-
 class Config(object):
     # necessary varaible to carried out different types of integration 
     pressureVars    = ["Cp"]
@@ -43,18 +41,20 @@ class Config(object):
     coord_Moments = ["l","m","n"] 
     infixes = coord_BON + coord_AERO + coord_Moments 
     
-    def __init__(self, xcog, ycog, zcog, alpha_deg, beta_deg, autoOrient, reverse_normal, reverse_aero_convention, varDict, verbose , outPutName ) : 
-        self.xcog = xcog 
-        self.ycog = ycog 
-        self.zcog = zcog 
-        self.alpha_deg = alpha_deg
-        self.beta_deg = beta_deg
-        self.autoOrient = autoOrient
-        self.reverse_normal = reverse_normal
-        self.reverse_aero_convention = reverse_aero_convention
+    def __init__(self, args, varDict) : 
+        self.xcog = args.cog[0]
+        self.ycog = args.cog[1] 
+        self.zcog = args.cog[2]
+        self.alpha_deg = args.alpha_deg
+        self.beta_deg = args.beta_deg
+        self.autoOrient = args.autoOrient
+        self.reverse_normal = args.reverse_normal
+        self.reverse_aero_convention = args.reverse_aero_convention
         self.varDict = varDict
-        self.verbose = verbose
-        self.outPutName = outPutName
+        self.verbose = args.verbose
+        self.outPutName = args.outPutName
+        self.Sref = args.Sref 
+        self.Lref = args.Lref 
     
     def IsPressureIntegrationPossible(self):
         possible = True 
@@ -122,11 +122,9 @@ class Config(object):
             xE1 =  math.cos( beta) * math.cos(alpha)
             yE1 = -math.sin( beta )
             zE1 =  math.cos(beta) * math.sin(alpha) 
-
             xE2 = -math.cos( alpha) * math.sin(beta)
             yE2 = +math.cos( beta)  
             zE2 =  math.sin(alpha) * math.sin(beta) 
-
             xE3 = -math.sin( alpha)
             yE3 = 0 
             zE3 = +math.cos( alpha)
@@ -146,35 +144,32 @@ class Config(object):
                 exit(32) 
         return xE1, yE1, zE1, xE2, yE2, zE2, xE3, yE3, zE3 
     
-'''
-Read tecplot file and extract zone as dataframe. 
-Plot data 
-'''
 def main(): 
-    parser = argparse.ArgumentParser(description='Read tecplot file and extract zone as dataframe. Plot data', formatter_class=RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(description='Read surface file and integrate pressure, friction and other (eg flux)', formatter_class=RawTextHelpFormatter)
     parser.add_argument("-i", "--list_input", help="list of files" ,  nargs='+', type = str , default = [] ,   required = True  )  
-    parser.add_argument("-f", "--forceFormat"   , help="force the reader" , type = str , default = "") 
-    parser.add_argument("-o", "--outPutName"   , help="default bae name for output" , type = str , default = "output") 
+    parser.add_argument("-f", "--forceFormat" , help="force the reader" , type = str , default = "") 
+    parser.add_argument("-v", "--verbose" , help="extra output" , type = str , default = "") 
+    parser.add_argument("-o", "--outPutName" , help="default name for output" , type = str , default = "output") 
     parser.add_argument("-Cp", "--Cp"     , help="variable value for pressure coefficient" , type = str , default = "") 
-    parser.add_argument("-Cfx", "--Cfx"   , help="variable value for Cfx" , type = str , default = "") 
-    parser.add_argument("-Cfy", "--Cfy"   , help="variable value for Cfy" , type = str , default = "") 
-    parser.add_argument("-Cfz", "--Cfz"   , help="variable value for Cfz" , type = str , default = "") 
-    parser.add_argument("-q", "--q"   , help="one variable value for per surface quantity (eg flux)" , type = str , default = "") 
-    parser.add_argument("-qd", "--qd"   , help="second variable value for per surface quantity (eg flux chem)" , type = str , default = "") 
+    parser.add_argument("-Cfx",  help="variable value for Cfx" , type = str , default = "") 
+    parser.add_argument("-Cfy",  help="variable value for Cfy" , type = str , default = "") 
+    parser.add_argument("-Cfz",  help="variable value for Cfz" , type = str , default = "") 
+    parser.add_argument("-q",  help="one variable value for per surface quantity (eg flux)" , type = str , default = "") 
+    parser.add_argument("-qd", help="second variable value for per surface quantity (eg flux chem)" , type = str , default = "") 
     parser.add_argument("-alpha", "--alpha_deg"   , help="angle of attack" , type = float , default = 0 , required = True  ) 
     parser.add_argument("-beta", "--beta_deg"   , help="angle of side slip" , type = float , default = 0 , required = True  ) 
     parser.add_argument("-int", "--openGL_GUI", help="lannch openGL window to vizualize your data",action="store_true") 
     parser.add_argument("-autoOrient", "--autoOrient", help="used autoorient feature from VTK ",action="store_true") 
-    parser.add_argument("-reverse_normal", "--reverse_normal", help="reverse normal (multiply all by -1)",action="store_true") 
-    parser.add_argument("-reverse_aero_convention", "--reverse_aero_convention", help="reverse normal (multiply all by -1)",action="store_true") 
-    
+    parser.add_argument("-reverse_normal",  help="reverse normal (multiply all by -1)",action="store_true") 
+    parser.add_argument("-reverse_aero_convention",  help="reverse normal (multiply all by -1)",action="store_true") 
+    parser.add_argument("-cog", nargs=3, metavar=('xcog', 'ycog', 'zcog'), help="cener of gravity coordinnates", type=float, default=None,required = True )
+    parser.add_argument("-Sref", help="reference surface" , type = float , default = 1 ) 
+    parser.add_argument("-Lref", help="reference length" , type = float , default = 1 ) 
     args = parser.parse_args()
     list_input = args.list_input
-    forceFormat = args.forceFormat
     cwd= os.getcwd()
     for relativePath in list_input :
         absolutePath = os.path.join(cwd, relativePath)
-    
     varDict = {}
     if args.Cp != "" :
         varDict["Cp"] = args.Cp
@@ -188,19 +183,11 @@ def main():
         varDict["q"] = args.q
     if args.qd != "" :
         varDict["qd"] = args.qd
-    
     print("used autoOrient : %s"%args.autoOrient )
     print("used reverse_normal : %s"%args.reverse_normal )
-    
-    verbose = True
-    xcog, ycog, zcog = 0. ,0. ,2.  # TODO addd to parser
-    config = Config(
-        xcog, ycog, zcog,
-        args.alpha_deg, args.beta_deg, 
-        args.autoOrient, args.reverse_normal, args.reverse_aero_convention,
-        varDict , verbose , args.outPutName )
+    config = Config( args,  varDict  )
     if True : 
-        vtkObject = getPolyDataByLoadingFile(absolutePath , forceFormat , config.verbose )
+        vtkObject = getPolyDataByLoadingFile(absolutePath , args.forceFormat , config.verbose )
         integrate(vtkObject, config)
         VARIABLE = "direction [-]"
         if args.openGL_GUI :
@@ -271,6 +258,18 @@ def getDataFrameAeroData (polyData, config ):
     df = pd.DataFrame(dict_new) 
     return df 
 
+def computeCoG(df):
+    w =  df["area"].sum()
+    x = df["cx"] * df["area"] / w 
+    y = df["cy"] * df["area"] / w 
+    z = df["cz"] * df["area"] / w 
+
+    print("Cog coordinate (area weighted): %f %f %f"%(x.sum(),y.sum(),z.sum()))
+    x = df["cx"].mean()
+    y = df["cy"].mean()
+    z = df["cz"].mean()
+    print("Cog coordinate                : %f %f %f"%(x,y,z))
+
 '''
 recover  Normals and center from cells.
 '''
@@ -311,6 +310,7 @@ def getDataFrameGeo (polyData, config ):
         'cz': centers_z , 
     }
     df = pd.DataFrame(dict_new) 
+    computeCoG(df)
     # account for CoG 
     df["cx"] = df["cx"].apply(lambda x : x - config.xcog)
     df["cy"] = df["cy"].apply(lambda x : x - config.ycog)
@@ -327,28 +327,28 @@ def ComputeIntegrationQOIsAllCells(df, config):
     if config.IsPressureIntegrationPossible() :
         if config.verbose :
             print("pressure ...") 
-        df["CxP"] = df["Cp"] * df["nx"] * df["area"] 
-        df["CyP"] = df["Cp"] * df["ny"] * df["area"] 
-        df["CzP"] = df["Cp"] * df["nz"] * df["area"] 
-        df["ClP"] = df["cy"] * df["CzP"] - df["cz"] * df["CyP"] 
-        df["CmP"] = df["cz"] * df["CxP"] - df["cx"] * df["CzP"] 
-        df["CnP"] = df["cx"] * df["CyP"] - df["cy"] * df["CxP"] 
-        df["CDP"] = df["CxP"] * xE1 + df["CyP"] * yE1 + df["CzP"]* zE1 
-        df["CQP"] = df["CxP"] * xE2 + df["CyP"] * yE2 + df["CzP"]* zE2 
-        df["CLP"] = df["CxP"] * xE3 + df["CyP"] * yE3 + df["CzP"]* zE3 
+        df["CxP"] = df["Cp"] * df["nx"] * df["area"] / config.Sref
+        df["CyP"] = df["Cp"] * df["ny"] * df["area"] / config.Sref
+        df["CzP"] = df["Cp"] * df["nz"] * df["area"] / config.Sref
+        df["ClP"] = (df["cy"] * df["CzP"] - df["cz"] * df["CyP"] ) / config.Sref / config.Lref
+        df["CmP"] = (df["cz"] * df["CxP"] - df["cx"] * df["CzP"] ) / config.Sref / config.Lref
+        df["CnP"] = (df["cx"] * df["CyP"] - df["cy"] * df["CxP"] ) / config.Sref / config.Lref
+        df["CDP"] = (df["CxP"] * xE1 + df["CyP"] * yE1 + df["CzP"]* zE1 ) / config.Sref
+        df["CQP"] = (df["CxP"] * xE2 + df["CyP"] * yE2 + df["CzP"]* zE2 ) / config.Sref
+        df["CLP"] = (df["CxP"] * xE3 + df["CyP"] * yE3 + df["CzP"]* zE3 ) / config.Sref
     # VISCOUS 
     if config.IsViscousIntegrationPossible() :
         if config.verbose :
             print("Viscous ...") 
-        df["CxV"] = df["Cfx"] * df["area"] 
-        df["CyV"] = df["Cfy"] * df["area"] 
-        df["CzV"] = df["Cfz"] * df["area"] 
-        df["ClV"] = (df["cy"] * df["Cfz"] - df["cz"] * df["Cfy"] ) * df["area"]
-        df["CmV"] = (df["cz"] * df["Cfx"] - df["cx"] * df["Cfz"] ) * df["area"]
-        df["CnV"] = (df["cx"] * df["Cfy"] - df["cy"] * df["Cfx"] ) * df["area"]
-        df["CDV"] = df["CxV"] * xE1 + df["CyV"] * yE1 + df["CzV"]* zE1 
-        df["CQV"] = df["CxV"] * xE2 + df["CyV"] * yE2 + df["CzV"]* zE2 
-        df["CLV"] = df["CxV"] * xE3 + df["CyV"] * yE3 + df["CzV"]* zE3 
+        df["CxV"] = df["Cfx"] * df["area"] / config.Sref
+        df["CyV"] = df["Cfy"] * df["area"] / config.Sref
+        df["CzV"] = df["Cfz"] * df["area"] / config.Sref
+        df["ClV"] = (df["cy"] * df["Cfz"] - df["cz"] * df["Cfy"] ) * df["area"] / config.Sref / config.Lref
+        df["CmV"] = (df["cz"] * df["Cfx"] - df["cx"] * df["Cfz"] ) * df["area"] / config.Sref / config.Lref
+        df["CnV"] = (df["cx"] * df["Cfy"] - df["cy"] * df["Cfx"] ) * df["area"] / config.Sref / config.Lref
+        df["CDV"] = df["CxV"] * xE1 + df["CyV"] * yE1 + df["CzV"]* zE1 / config.Sref
+        df["CQV"] = df["CxV"] * xE2 + df["CyV"] * yE2 + df["CzV"]* zE2 / config.Sref
+        df["CLV"] = df["CxV"] * xE3 + df["CyV"] * yE3 + df["CzV"]* zE3 / config.Sref
     # TOTAL
     if config.IsPressureIntegrationPossible() or config.IsViscousIntegrationPossible() :
         for j in config.infixes : 

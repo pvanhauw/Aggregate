@@ -469,6 +469,13 @@ def integrate(polyData, config ):
     # csv lin style 
     df_integration_lin = ConcateRow(df_integration , config )
     df_integration_lin.to_csv(file_name, sep=';', encoding='utf-8')
+    
+    vtk_file_name = os.path.join( os.getcwd() , config.outPutName+".vtk" )
+    writer = vtk.vtkPolyDataWriter()
+    writer.SetInputData(polyData)
+    writer.SetFileName(vtk_file_name )
+    writer.Write()
+    del writer 
 
 def getPolyDataByLoadingFile( absolutePathName, fileExtention,  verbose = False ):
         # test if file exists

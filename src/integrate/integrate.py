@@ -88,6 +88,11 @@ class Config(object):
                 break 
         return possible
 
+    def DoIntegrate(self):
+        if self.IsChemHeatFluxIntegrationPossible() or self.IsHeatFluxIntegrationPossible() or self.IsViscousIntegrationPossible() or self.IsPressureIntegrationPossible() :
+            return True 
+        else :
+            return False 
     '''
     IJK 
         I = "C" always
@@ -156,20 +161,18 @@ def main():
     parser.add_argument("-Cfz",  help="variable value for Cfz" , type = str , default = "") 
     parser.add_argument("-q",  help="one variable value for per surface quantity (eg flux)" , type = str , default = "") 
     parser.add_argument("-qd", help="second variable value for per surface quantity (eg flux chem)" , type = str , default = "") 
-    parser.add_argument("-alpha", "--alpha_deg"   , help="angle of attack" , type = float , default = 0 , required = True  ) 
-    parser.add_argument("-beta", "--beta_deg"   , help="angle of side slip" , type = float , default = 0 , required = True  ) 
+    parser.add_argument("-alpha", "--alpha_deg"   , help="angle of attack" , type = float , default = 0 , required = False  ) 
+    parser.add_argument("-beta", "--beta_deg"   , help="angle of side slip" , type = float , default = 0 , required = False  ) 
     parser.add_argument("-int", "--openGL_GUI", help="lannch openGL window to vizualize your data",action="store_true") 
     parser.add_argument("-autoOrient", "--autoOrient", help="used autoorient feature from VTK ",action="store_true") 
     parser.add_argument("-reverse_normal",  help="reverse normal (multiply all by -1)",action="store_true") 
     parser.add_argument("-reverse_aero_convention",  help="reverse normal (multiply all by -1)",action="store_true") 
-    parser.add_argument("-cog", nargs=3, metavar=('xcog', 'ycog', 'zcog'), help="cener of gravity coordinnates", type=float, default=None,required = True )
-    parser.add_argument("-Sref", help="reference surface" , type = float , default = 1 ) 
-    parser.add_argument("-Lref", help="reference length" , type = float , default = 1 ) 
+    parser.add_argument("-cog", nargs=3, metavar=('xcog', 'ycog', 'zcog'), help="cener of gravity coordinnates", type=float, default=[0., 0., 0.] , required = False )
+    parser.add_argument("-Sref", help="reference surface" , type = float , default = 1. ) 
+    parser.add_argument("-Lref", help="reference length" , type = float , default = 1. ) 
     args = parser.parse_args()
     list_input = args.list_input
     cwd= os.getcwd()
-    for relativePath in list_input :
-        absolutePath = os.path.join(cwd, relativePath)
     varDict = {}
     if args.Cp != "" :
         varDict["Cp"] = args.Cp
@@ -186,12 +189,18 @@ def main():
     print("used autoOrient : %s"%args.autoOrient )
     print("used reverse_normal : %s"%args.reverse_normal )
     config = Config( args,  varDict  )
-    if True : 
+    for relativePath in list_input :
+        absolutePath = os.path.join(cwd, relativePath)
         vtkObject = getPolyDataByLoadingFile(absolutePath , args.forceFormat , config.verbose )
-        integrate(vtkObject, config)
-        VARIABLE = "direction [-]"
+        if config.DoIntegrate():
+            integrate(vtkObject, config)
+            VARIABLE = "direction [-]"
+            display_variable = True 
+        else : 
+            VARIABLE = ""
+            display_variable = False 
         if args.openGL_GUI :
-            Launch(vtkObject , VARIABLE)
+            Launch(vtkObject , VARIABLE, display_variable )
             
 def appendNormal(polyData, config ):
     if config.verbose :
@@ -519,14 +528,14 @@ def getPolyDataByLoadingFile( absolutePathName, fileExtention,  verbose = False 
         output = dsSurfaceFilt.GetOutput()
         return output
         
-def Launch(input , VARIABLE) : 
+def Launch(input , VARIABLE, display_variable) : 
     input.GetCellData().SetActiveScalars(VARIABLE)
     mapMesh = vtk.vtkDataSetMapper()
     #mapMesh = vtk.vtkPolyDataMapper()
     mapMesh.SetInputData(input)
     #mapMesh.SetInputConnection(input)
-    
-    mapMesh.SetScalarRange(input.GetCellData().GetArray(VARIABLE).GetRange())
+    if display_variable :
+        mapMesh.SetScalarRange(input.GetCellData().GetArray(VARIABLE).GetRange())
     mapMesh.SetScalarModeToUseCellData()
 
     meshActor = vtk.vtkActor()

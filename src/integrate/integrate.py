@@ -12,6 +12,7 @@ import vtk
 import numpy as np
 
 from vtk.util.numpy_support import numpy_to_vtk, vtk_to_numpy
+from numpy import poly
 #https://www.programcreek.com/python/example/108192/vtk.util.numpy_support.vtk_to_numpy
 
 # best practice based on enum
@@ -150,26 +151,30 @@ class Config(object):
         return xE1, yE1, zE1, xE2, yE2, zE2, xE3, yE3, zE3 
     
 def main(): 
-    parser = argparse.ArgumentParser(description='Read surface file and integrate pressure, friction and other (eg flux)', formatter_class=RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(description='Read surface file and integrate pressure, friction and other (eg flux)\nElement can be concatenated together provided they have the similar data', formatter_class=RawTextHelpFormatter)
     parser.add_argument("-i", "--list_input", help="list of files" ,  nargs='+', type = str , default = [] ,   required = True  )  
     parser.add_argument("-f", "--forceFormat" , help="force the reader" , type = str , default = "") 
-    parser.add_argument("-v", "--verbose" , help="extra output" , type = str , default = "") 
     parser.add_argument("-o", "--outPutName" , help="default name for output" , type = str , default = "output") 
-    parser.add_argument("-Cp", "--Cp"     , help="variable value for pressure coefficient" , type = str , default = "") 
-    parser.add_argument("-Cfx",  help="variable value for Cfx" , type = str , default = "") 
-    parser.add_argument("-Cfy",  help="variable value for Cfy" , type = str , default = "") 
-    parser.add_argument("-Cfz",  help="variable value for Cfz" , type = str , default = "") 
-    parser.add_argument("-q",  help="one variable value for per surface quantity (eg flux)" , type = str , default = "") 
-    parser.add_argument("-qd", help="second variable value for per surface quantity (eg flux chem)" , type = str , default = "") 
+    parser.add_argument("-Cp", "--Cp"     , help="integration variable value for pressure coefficient" , type = str , default = "") 
+    parser.add_argument("-Cfx",  help="integration variable for Cfx" , type = str , default = "") 
+    parser.add_argument("-Cfy",  help="integration variable for Cfy" , type = str , default = "") 
+    parser.add_argument("-Cfz",  help="integration variable for Cfz" , type = str , default = "") 
+    parser.add_argument("-q",  help="integration variable for per-surface-quantity (eg flux)" , type = str , default = "") 
+    parser.add_argument("-qd", help="integration variable2 for per-surface quantity (eg flux chem)" , type = str , default = "") 
     parser.add_argument("-alpha", "--alpha_deg"   , help="angle of attack" , type = float , default = 0 , required = False  ) 
     parser.add_argument("-beta", "--beta_deg"   , help="angle of side slip" , type = float , default = 0 , required = False  ) 
-    parser.add_argument("-int", "--openGL_GUI", help="lannch openGL window to vizualize your data",action="store_true") 
-    parser.add_argument("-autoOrient", "--autoOrient", help="used autoorient feature from VTK ",action="store_true") 
-    parser.add_argument("-reverse_normal",  help="reverse normal (multiply all by -1)",action="store_true") 
-    parser.add_argument("-reverse_aero_convention",  help="reverse normal (multiply all by -1)",action="store_true") 
-    parser.add_argument("-cog", nargs=3, metavar=('xcog', 'ycog', 'zcog'), help="cener of gravity coordinnates", type=float, default=[0., 0., 0.] , required = False )
+    parser.add_argument("-cog", nargs=3, metavar=('xcog', 'ycog', 'zcog'), help="coordinnates of the center of gravity for moment computation", type=float, default=[0., 0., 0.] , required = False )
     parser.add_argument("-Sref", help="reference surface" , type = float , default = 1. ) 
     parser.add_argument("-Lref", help="reference length" , type = float , default = 1. ) 
+    parser.add_argument("-reverse_normal",  help="reverse normal (multiply all by -1)",action="store_true") 
+    parser.add_argument("-reverse_aero_convention",  help="TODO",action="store_true") 
+    parser.add_argument("-autoOrient", "--autoOrient", help="used autoorient feature from VTK ",action="store_false") 
+    parser.add_argument("-c", "--concatenate", help="concatenate all the files, either to integrate or for using the openGL_GUI",action="store_true") 
+    parser.add_argument("-t", "--translate" , nargs=3, metavar=('tx', 'ty', 'tz'), help="translate by (tx, ty, tz)", type=float, default=[0., 0., 0.] , required = False )
+    parser.add_argument("-r", "--rotate", nargs=9, metavar=('r11', 'r12', 'r13','r21', 'r22', 'r23','r31', 'r32', 'r33',), 
+                        help="Apply R * X, with [r11 r12 r13, r21 r22 r23, r31 r32 r33]", type=float, default=[0., 0., 0., 0., 0., 0., 0., 0., 0.] , required = False )
+    parser.add_argument("-v", "--verbose" , help="extra output" ,  action="store_true") 
+    parser.add_argument("-gl", "--openGL_GUI", help="launch openGL window to vizualize your data",action="store_true") 
     args = parser.parse_args()
     list_input = args.list_input
     cwd= os.getcwd()
@@ -189,19 +194,61 @@ def main():
     print("used autoOrient : %s"%args.autoOrient )
     print("used reverse_normal : %s"%args.reverse_normal )
     config = Config( args,  varDict  )
+    
+    if config.DoIntegrate():
+        VARIABLE = "direction [-]"
+        display_variable = True 
+    else : 
+       #VARIABLE = "Heat Flux: Net [J/s]"
+       #VARIABLE = "Temperature translation [K]"
+       #VARIABLE = "Cp [-]"
+       VARIABLE = ""
+       display_variable = False
+ 
+    polyDataList = []
     for relativePath in list_input :
         absolutePath = os.path.join(cwd, relativePath)
-        vtkObject = getPolyDataByLoadingFile(absolutePath , args.forceFormat , config.verbose )
+        polyData = getPolyDataByLoadingFile(absolutePath , args.forceFormat , config.verbose )
+        # create and recover normals 
+        polyData = appendNormal(polyData, config )
+        if args.concatenate :
+            polyDataList.append(polyData)
+        else :
+            if config.DoIntegrate():
+                integrate(polyData, config)
+            if args.openGL_GUI :
+                Launch(polyData , VARIABLE, display_variable )
+    if args.concatenate :
+        removeDupliatePoints = False
+        polyDataConcatenated = concatenatePolyData( polyDataList, removeDupliatePoints)
         if config.DoIntegrate():
-            integrate(vtkObject, config)
-            VARIABLE = "direction [-]"
-            display_variable = True 
-        else : 
-            VARIABLE = ""
-            display_variable = False 
+            integrate(polyDataConcatenated, config)
         if args.openGL_GUI :
-            Launch(vtkObject , VARIABLE, display_variable )
-            
+            Launch(polyDataConcatenated , VARIABLE, display_variable )
+    
+    if not args.translate == [0., 0., 0.] :
+        pass # TODO
+    if not args.translate == [0., 0., 0., 0., 0., 0., 0., 0., 0.]  :
+        pass # TODO
+
+def concatenatePolyData( polyDataList, removeDupliatePoints):
+    print("concatenate the inputs...")
+    #Append the meshes
+    appendFilter = vtk.vtkAppendPolyData()
+    for polyData in polyDataList : 
+        appendFilter.AddInputData(polyData)
+    appendFilter.Update()
+    # Remove any duplicate points.
+    if removeDupliatePoints :
+        print("removing the dupliated points...")
+        cleanFilter = vtk.vtkCleanPolyData() 
+        cleanFilter.SetInputConnection(appendFilter.GetOutputPort())
+        cleanFilter.Update()
+        return cleanFilter.GetOutput()
+    else :
+        return appendFilter.GetOutput()
+
+
 def appendNormal(polyData, config ):
     if config.verbose :
         print("create normals ...")
@@ -283,8 +330,6 @@ def computeCoG(df):
 recover  Normals and center from cells.
 '''
 def getDataFrameGeo (polyData, config ):
-    # create and recover normals 
-    polyData = appendNormal(polyData, config )
     # 
     if config.verbose :
         print("recover triangle centers...")
@@ -511,12 +556,13 @@ def getPolyDataByLoadingFile( absolutePathName, fileExtention,  verbose = False 
             #reader = vtk.vtkUnstructuredGridReader()
             reader = vtk.vtkXMLUnstructuredGridReader()
             #reader = vtk.vtkXMLReader()
+        elif fileExtention == 'pvd' or fileExtention == 'pvtu':
+            reader = vtk.vtkXMLPUnstructuredGridReader()
         elif fileExtention == 'vtp':
             reader = vtk.vtkPolyDataMapper()
         else:
             raise Exception('Filetype ({:s}) must be either "ply", "stl", "vtk", "vtu", "vtp" '.format(fileExtention))
-        if verbose : 
-            print("Reading: {:s}".format(absolutePathName) )
+        print("Reading: {:s}".format(absolutePathName) )
         # Load file
         reader.SetFileName(absolutePathName)
         reader.Update()
@@ -525,8 +571,8 @@ def getPolyDataByLoadingFile( absolutePathName, fileExtention,  verbose = False 
         dsSurfaceFilt = vtk.vtkDataSetSurfaceFilter() 
         dsSurfaceFilt.SetInputData(output)
         dsSurfaceFilt.Update()
-        output = dsSurfaceFilt.GetOutput()
-        return output
+        vtkPolyData = dsSurfaceFilt.GetOutput()
+        return vtkPolyData
         
 def Launch(input , VARIABLE, display_variable) : 
     input.GetCellData().SetActiveScalars(VARIABLE)
@@ -540,7 +586,7 @@ def Launch(input , VARIABLE, display_variable) :
 
     meshActor = vtk.vtkActor()
     meshActor.SetMapper(mapMesh)
-    #meshActor.GetProperty().SetRepresentationToWireframe()
+    meshActor.GetProperty().SetRepresentationToWireframe()
 
     # Create the rendering window, renderer, and interactive renderer
     ren = vtk.vtkRenderer()

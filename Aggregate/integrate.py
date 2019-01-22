@@ -8,7 +8,7 @@ import pandas as pd
 import argparse
 from argparse import RawTextHelpFormatter
 import vtk 
-#from geometry.Point import Point
+#from Aggregate.geometry.Point import Point
 import numpy as np
 
 from vtk.util.numpy_support import numpy_to_vtk, vtk_to_numpy

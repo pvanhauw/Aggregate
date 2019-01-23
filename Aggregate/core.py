@@ -41,6 +41,7 @@ class Config(object):
         self.outPutName = args.outPutName
         self.Sref = args.Sref 
         self.Lref = args.Lref 
+        self.no_write_vtk = args.no_write_vtk
     
     def IsPressureIntegrationPossible(self):
         possible = True 
@@ -205,7 +206,7 @@ def main():
             pass # TODO
         if not args.translate == [0., 0., 0., 0., 0., 0., 0., 0., 0.]  :
             pass # TODO
-        if not args.no_write_vtk:
+        if not config.no_write_vtk:
             vtk_file_name = os.path.join( os.getcwd() , "%s-%s.vtk"%(config.outPutName, "concat") )
             print('writting: %s'%vtk_file_name)
             writer = vtk.vtkPolyDataWriter()

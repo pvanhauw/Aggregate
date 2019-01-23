@@ -233,10 +233,49 @@ def ConcateRow(df_integration ):
 def translateCenters(df, xcog, ycog, zcog):
     computeCoG(df)
     # account for CoG 
-    df["cx"] = df["cx"].apply(lambda x : x - xcog)
-    df["cy"] = df["cy"].apply(lambda x : x - ycog)
-    df["cz"] = df["cz"].apply(lambda x : x - zcog)
+    df["cx"] = df["cx"].apply(lambda x : x + xcog)
+    df["cy"] = df["cy"].apply(lambda x : x + ycog)
+    df["cz"] = df["cz"].apply(lambda x : x + zcog)
     return df 
+
+def plotIntegration(df, config):
+    Yvars = []
+    if config.IsPressureIntegrationPossible() or config.IsViscousIntegrationPossible() :
+        for j in config.infixes : 
+            varTot= "%s%s%s"%("C",j,"")
+            varP  = "%s%s%s"%("C",j,"P")
+            varV  = "%s%s%s"%("C",j,"V")
+            Yvars.append(varTot)
+            if config.IsPressureIntegrationPossible() :
+                Yvars.append(varP)
+            if config.IsViscousIntegrationPossible() :
+                Yvars.append(varV)
+    # A/R 
+    height= 1050
+    width= 1680 
+    scale_ratio = 100
+    import matplotlib.pyplot as plt
+    fig, axarr = plt.subplots(2,  figsize=(width / scale_ratio ,height/ scale_ratio),  gridspec_kw = {'height_ratios':[4, 6 ] } )
+    # 
+    YS = [Yvars ] 
+    vals = list(CellOrientationXYZ.labels.values())
+    i = 0
+    for j in range(len(YS)) : 
+        Y = YS[j] 
+        ax = axarr[i]
+        df_display = df[Y].T["total"]
+        ax = df_display.plot.bar(stacked=True, ax = ax , grid = True  )
+        i += 1 
+        ax = axarr[i]
+        df_display = df[Y].T[vals]
+        ax = df_display.plot.bar(stacked=True, ax = ax , grid = True  )
+    fig.tight_layout()
+    fig = ax.get_figure() 
+    fig.suptitle( config.outPutName) 
+    filename = "%s.png"%(config.outPutName) 
+    fig.savefig(filename ) 
+    print("plot in : %s"% filename)  
+    plt.close('all') 
 
 def integrate(polyData, config ):        
     # recover data for integration
@@ -257,6 +296,8 @@ def integrate(polyData, config ):
     for x in list(df_integration) :
         print(x)
     print(df_integration)
+    # plot 
+    plotIntegration(df_integration, config)
     # save 
     file_name = os.path.join( os.getcwd() , config.outPutName+".csv" )
     # csv 
@@ -265,12 +306,13 @@ def integrate(polyData, config ):
     df_integration_lin = ConcateRow(df_integration   )
     df_integration_lin.to_csv(file_name, sep=';', encoding='utf-8')
     
-    vtk_file_name = os.path.join( os.getcwd() , config.outPutName+".vtk" )
-    writer = vtk.vtkPolyDataWriter()
-    writer.SetInputData(polyData)
-    writer.SetFileName(vtk_file_name )
-    writer.Write()
-    del writer 
+    if not config.no_write_vtk :
+        vtk_file_name = os.path.join( os.getcwd() , config.outPutName+".vtk" )
+        writer = vtk.vtkPolyDataWriter()
+        writer.SetInputData(polyData)
+        writer.SetFileName(vtk_file_name )
+        writer.Write()
+        del writer 
 
         
         

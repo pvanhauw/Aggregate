@@ -8,7 +8,8 @@ import pandas as pd
 import vtk 
 #from Aggregate.geometry.Point import Point
 
-from vtk.util.numpy_support import numpy_to_vtk, vtk_to_numpy
+#from vtk.util.numpy_support import numpy_to_vtk
+from vtk.util.numpy_support import vtk_to_numpy
 #https://www.programcreek.com/python/example/108192/vtk.util.numpy_support.vtk_to_numpy
 
 def concatenatePolyData( polyDataList, removeDupliatePoints):
@@ -175,6 +176,53 @@ def getPolyDataByLoadingFile( absolutePathName, fileExtention  ):
         dsSurfaceFilt.Update()
         vtkPolyData = dsSurfaceFilt.GetOutput()
         return vtkPolyData
-        
+    
+def writePolyData(polyData, relativePath , outputFormat  )  :
+    relativePathBase = relativePath.split(".")
+    relativePath = "%s.%s"%(relativePathBase[:-1].Join() , outputFormat)    
+    if outputFormat == "vtp": 
+        writer = vtk.vtkXMLUnstructuredGridWriter()
+    else : 
+        raise Exception('Output type ({:s}) unknowed. Type must be either "ply", "stl", "vtk", "vtu", "vtp", "tria" '.format(outputFormat))
 
+    writer.SetFileName(relativePath)
+    writer.SetDataModeToAscii()
+    writer.Update()
+    
+    
+        
+def getPolyDataCroppedFromData(polyData, list_variableToKeepForWriting ):
+    Narray = polyData.GetCellData().GetNumberOfArrays()
+    nameVars = [] 
+    for i in range(0, Narray ):
+        nameVar = polyData.GetCellData().GetArrayName(i)
+        nameVars.append(nameVar)
+    nameVars.sort()
+    #polyData.GetCellData().Dele
+    for nameVar in nameVars : 
+        if nameVar in list_variableToKeepForWriting :
+            # keep it 
+            print("keep : %s"%nameVar)
+            pass 
+        else : 
+            polyData.GetCellData().RemoveArray(nameVar)
+            # remove it 
+            pass 
+    return polyData
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
         

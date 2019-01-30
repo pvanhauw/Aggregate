@@ -141,6 +141,7 @@ def main():
     parser.add_argument("-i", "--list_input", help="list of files" ,  nargs='+', type = str , default = [] ,   required = True  )  
     parser.add_argument("-f", "--forceFormat" , help="force the reader" , type = str , default = "") 
     parser.add_argument("-o", "--outPutName" , help="default name for output" , type = str , default = "output") 
+    parser.add_argument("-k", "--list_variableToKeepForWriting", help="list of variable to write in the output vtk file. Everything is written if nothing is specified" ,  nargs='+', type = str , default = [] ,   required = False  )  
     parser.add_argument("-Cp", "--Cp"     , help="integration variable value for pressure coefficient" , type = str , default = "") 
     parser.add_argument("-Cfx",  help="integration variable for Cfx" , type = str , default = "") 
     parser.add_argument("-Cfy",  help="integration variable for Cfy" , type = str , default = "") 
@@ -209,6 +210,8 @@ def main():
         if not config.no_write_vtk:
             vtk_file_name = os.path.join( os.getcwd() , "%s-%s.vtk"%(config.outPutName, "concat") )
             print('writting: %s'%vtk_file_name)
+            if len(args.list_variableToKeepForWriting ):
+                polyDataConcatenated = vtkHelper.getPolyDataCroppedFromData(polyDataConcatenated, args.list_variableToKeepForWriting )
             writer = vtk.vtkPolyDataWriter()
             writer.SetInputData(polyDataConcatenated)
             writer.SetFileName(vtk_file_name )

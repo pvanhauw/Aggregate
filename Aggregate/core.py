@@ -159,7 +159,7 @@ def main():
     parser.add_argument("-c", "--concatenate", help="concatenate all the files, either to integrate or for using the openGL_GUI",action="store_true") 
     parser.add_argument("-t", "--translate" , nargs=3, metavar=('tx', 'ty', 'tz'), help="translate by (tx, ty, tz)", type=float, default=[0., 0., 0.] , required = False )
     parser.add_argument("-r", "--rotate", nargs=9, metavar=('r11', 'r12', 'r13','r21', 'r22', 'r23','r31', 'r32', 'r33',), 
-                        help="Apply R * X, with [r11 r12 r13, r21 r22 r23, r31 r32 r33]", type=float, default=[0., 0., 0., 0., 0., 0., 0., 0., 0.] , required = False )
+                        help="Apply R * X, with [r11 r12 r13, r21 r22 r23, r31 r32 r33]", type=float, default=[1., 0., 0., 0., 1., 0., 0., 0., 1.] , required = False )
     parser.add_argument("-v", "--verbose" , help="extra output" ,  action="store_true") 
     parser.add_argument("-nw", "--no_write_vtk" , help="do not write vtk output when concatening" ,  action="store_true") 
     parser.add_argument("-glvar", "--variableToDisplay" , help="variable that will be displayed when using the rendering  window" ,   type = str , default = "") 
@@ -205,7 +205,7 @@ def main():
     
         if not args.translate == [0., 0., 0.] :
             pass # TODO
-        if not args.translate == [0., 0., 0., 0., 0., 0., 0., 0., 0.]  :
+        if not args.translate == [1., 0., 0., 0., 1., 0., 0., 0., 1.]  :
             pass # TODO
         if not config.no_write_vtk:
             vtk_file_name = os.path.join( os.getcwd() , "%s-%s.vtk"%(config.outPutName, "concat") )
@@ -215,6 +215,7 @@ def main():
             writer = vtk.vtkPolyDataWriter()
             writer.SetInputData(polyDataConcatenated)
             writer.SetFileName(vtk_file_name )
+            writer.SetFileTypeToBinary()
             writer.Write()
         if args.openGL_GUI :
             vtkDisplay.RenderAndInteracte(polyDataConcatenated , config , args.variableToDisplay )

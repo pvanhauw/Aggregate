@@ -210,14 +210,71 @@ def getPolyDataCroppedFromData(polyData, list_variableToKeepForWriting ):
             pass 
     return polyData
     
+def ExtractDataFromTheClosestCellCenter( polyData ,  cvsFilePath) :
+    # load df 
+    if not os.path.isfile(cvsFilePath):
+        raise Exception('File {:s} does not exist'.format(cvsFilePath))
+    df = pd.read_csv(cvsFilePath )
+    # prepare data to be used from polydata
+    # var 
+    Narray = polyData.GetCellData().GetNumberOfArrays()
+    available_vars = []
+    for i in range(0, Narray ):
+        nameVar = polyData.GetCellData().GetArrayName(i)
+        available_vars.append(nameVar)
+    # CoG 
+    cells = polyData.GetPolys()
+    nbOfCells = cells.GetNumberOfCells()
+    centers_x = []
+    centers_y = []
+    centers_z = []
+    for i in range ( 0, nbOfCells ) :  # TODO this is slow. Remove that loop and 
+        tria = polyData.GetCell(i)
+        center = [0.,0.,0.]
+        # TODO : test if tria is a triangle. If not, handle other cases 
+        tria.TriangleCenter(tria.GetPoints().GetPoint(0), tria.GetPoints().GetPoint(1), tria.GetPoints().GetPoint(2), center)
+        centers_x.append(center[0])
+        centers_y.append(center[1])
+        centers_z.append(center[2])
+    # look up for closest point based on cell CoG
+    kDTree = vtk.vtkKdTree()
+    points = vtk.vtkPoints()
+    for i in range ( 0, nbOfCells )  : # TODO : this is slow, use numpy array instead 
+        points.InsertNextPoint(centers_x[i], centers_y[i] , centers_z[i])
+    kDTree.BuildLocatorFromPoints(points)
+    # TODO check header variables : existence of x y z 
+    ids = []
+    for index, row in df.iterrows():
+        x = row['x [m]']
+        y = row['y [m]']
+        z = row['z [m]']
+        points = [x , y , z ]
+        closestPointDist =  vtk.reference(0.0) 
+        testPoint = [ x ,y ,z ] 
+        id = kDTree.FindClosestPoint(testPoint, closestPointDist)
+        ids.append(id)
+        print("closest point for point : (%8.8f , %8.8f, %8.8f) is point id : %d   Closest distance is : %s "%(x,y,z, id,  closestPointDist ) )
+    # recover data based on the cell id.
+    datas = [] 
+    dict_new = {}
+    for var in available_vars : 
+        vtkdata = polyData.GetCellData().GetArray(var)
+        npdata = vtk_to_numpy(vtkdata)
+        croppedData = npdata[ids] 
+        #print(croppedData.shape)
+        # get ride of vect 
+        if len(croppedData.shape ) == 1  :
+            print( "append varaible : %s"% var )
+            datas.append(croppedData)
+            dict_new[var ] = croppedData
+    # write data 
+    df_to_append = pd.DataFrame(dict_new)
+    df_appened = pd.concat([df, df_to_append ] , axis = 1 ) 
+    filename = "interpolation.csv"
+    df_appened.to_csv(filename ) 
+    print("wrote interpolated data info : %s"%filename)
     
-    
-    
-    
-    
-    
-    
-    
+
     
     
     

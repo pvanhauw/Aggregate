@@ -164,6 +164,7 @@ def main():
     parser.add_argument("-nw", "--no_write_vtk" , help="do not write vtk output when concatening" ,  action="store_true") 
     parser.add_argument("-glvar", "--variableToDisplay" , help="variable that will be displayed when using the rendering  window" ,   type = str , default = "") 
     parser.add_argument("-gl", "--openGL_GUI", help="launch openGL window to vizualize your data",action="store_true") 
+    parser.add_argument("-e", "--extractFromCVS", help="csv file containing (x [m],y [m],z [m]) data that are used as coordinnates to extract data from the input.\nThe data that is the closest is used", default = "" ,required = False ) 
     args = parser.parse_args()
     list_input = args.list_input
     cwd= os.getcwd()
@@ -219,6 +220,9 @@ def main():
             writer.Write()
         if args.openGL_GUI :
             vtkDisplay.RenderAndInteracte(polyDataConcatenated , config , args.variableToDisplay )
+            
+        if not args.extractFromCVS == "" :
+            vtkHelper.ExtractDataFromTheClosestCellCenter( polyDataConcatenated ,  args.extractFromCVS)
   
 main()
         

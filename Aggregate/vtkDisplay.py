@@ -4,7 +4,19 @@ Created on Jan 19, 2019
 @author: pierre
 '''
 import vtk 
+
     
+def PrintDataArrays(polyData  ):
+    Narray = polyData.GetCellData().GetNumberOfArrays()
+    nameVars = [] 
+    print("Available data")
+    for i in range(0, Narray ):
+        nameVar = polyData.GetCellData().GetArrayName(i)
+        nameVars.append(nameVar)
+    nameVars.sort()
+    for nameVar in nameVars : 
+        print("%15s %s"%(" ", nameVar))
+
 def setVariableToDisplay(config , polyData , variableToDisplay ):
     display_variable = False 
     Narray = polyData.GetCellData().GetNumberOfArrays()

@@ -160,11 +160,11 @@ def main():
     parser.add_argument("-t", "--translate" , nargs=3, metavar=('tx', 'ty', 'tz'), help="translate by (tx, ty, tz)", type=float, default=[0., 0., 0.] , required = False )
     parser.add_argument("-r", "--rotate", nargs=9, metavar=('r11', 'r12', 'r13','r21', 'r22', 'r23','r31', 'r32', 'r33',), 
                         help="Apply R * X, with [r11 r12 r13, r21 r22 r23, r31 r32 r33]", type=float, default=[1., 0., 0., 0., 1., 0., 0., 0., 1.] , required = False )
-    parser.add_argument("-v", "--verbose" , help="extra output" ,  action="store_true") 
     parser.add_argument("-nw", "--no_write_vtk" , help="do not write vtk output when concatening" ,  action="store_true") 
     parser.add_argument("-glvar", "--variableToDisplay" , help="variable that will be displayed when using the rendering  window" ,   type = str , default = "") 
     parser.add_argument("-gl", "--openGL_GUI", help="launch openGL window to vizualize your data",action="store_true") 
     parser.add_argument("-e", "--extractFromCVS", help="csv file containing (x [m],y [m],z [m]) data that are used as coordinnates to extract data from the input.\nThe data that is the closest is used", default = "" ,required = False ) 
+    parser.add_argument("-v", "--verbose" , help="extra output" ,  action="store_true") 
     args = parser.parse_args()
     list_input = args.list_input
     cwd= os.getcwd()
@@ -189,6 +189,7 @@ def main():
     for relativePath in list_input :
         absolutePath = os.path.join(cwd, relativePath)
         polyData = vtkHelper.getPolyDataByLoadingFile(absolutePath , args.forceFormat )
+        vtkDisplay.PrintDataArrays(polyData)
         # create and recover normals 
         polyData = vtkHelper.appendNormal(polyData, config.verbose, config.autoOrient )
         if args.concatenate :

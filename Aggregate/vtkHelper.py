@@ -134,7 +134,7 @@ def getDataFrameGeo (polyData, verbose, reverse_normal):
     df = pd.DataFrame(dict_new) 
     return df 
 
-def getPolyDataByLoadingFile( absolutePathName, fileExtention  ):
+def getPolyDataByLoadingFile( absolutePathName, fileExtention = "" ):
         # test if file exists
         if not os.path.isfile(absolutePathName):
             raise Exception('File {:s} does not exist'.format(absolutePathName))

@@ -296,15 +296,17 @@ def integrate(polyData, config ):
     for x in list(df_integration) :
         print(x)
     print(df_integration)
-    # plot 
-    plotIntegration(df_integration, config)
     # save 
     file_name = os.path.join( os.getcwd() , config.outPutName+".csv" )
+    print("write integration data in : %s"% file_name)
     # csv 
     #df_integration.to_csv(file_name, sep=';', encoding='utf-8')
     # csv lin style 
     df_integration_lin = ConcateRow(df_integration   )
     df_integration_lin.to_csv(file_name, sep=';', encoding='utf-8')
+    
+    # plot 
+    plotIntegration(df_integration, config)
     
     if not config.no_write_vtk :
         vtk_file_name = os.path.join( os.getcwd() , config.outPutName+".vtk" )

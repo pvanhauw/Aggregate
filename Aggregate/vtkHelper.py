@@ -6,7 +6,6 @@ Created on Jan 19, 2019
 import os 
 import pandas as pd  
 import vtk 
-#from Aggregate.geometry.Point import Point
 
 #from vtk.util.numpy_support import numpy_to_vtk
 from vtk.util.numpy_support import vtk_to_numpy
@@ -39,6 +38,7 @@ def appendNormal(polyData, verbose, autoOrient ):
     normals.SetSplitting(0)
     if  not autoOrient :
         normals.AutoOrientNormalsOn()
+        print("AutoOrientNormalsOn")
     normals.ConsistencyOn()
     normals.Update()
     polyData = normals.GetOutput()

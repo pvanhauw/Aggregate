@@ -156,7 +156,6 @@ def main():
     parser.add_argument("-reverse_normal",  help="reverse normal (multiply all by -1)",action="store_true") 
     parser.add_argument("-reverse_aero_convention",  help="TODO",action="store_true") 
     parser.add_argument("-autoOrient", "--autoOrient", help="used autoorient feature from VTK ",action="store_false") 
-    parser.add_argument("-c", "--concatenate", help="concatenate all the files, either to integrate or for using the openGL_GUI",action="store_true") 
     parser.add_argument("-t", "--translate" , nargs=3, metavar=('tx', 'ty', 'tz'), help="translate by (tx, ty, tz)", type=float, default=[0., 0., 0.] , required = False )
     parser.add_argument("-r", "--rotate", nargs=9, metavar=('r11', 'r12', 'r13','r21', 'r22', 'r23','r31', 'r32', 'r33',), 
                         help="Apply R * X, with [r11 r12 r13, r21 r22 r23, r31 r32 r33]", type=float, default=[1., 0., 0., 0., 1., 0., 0., 0., 1.] , required = False )
@@ -185,6 +184,7 @@ def main():
     print("used reverse_normal : %s"%args.reverse_normal )
     config = Config( args,  varDict  )
     
+    # concatenate data while computing normals individually for each files 
     polyDataList = []
     for relativePath in list_input :
         absolutePath = os.path.join(cwd, relativePath)
@@ -192,38 +192,35 @@ def main():
         vtkDisplay.PrintDataArrays(polyData)
         # create and recover normals 
         polyData = vtkHelper.appendNormal(polyData, config.verbose, config.autoOrient )
-        if args.concatenate :
-            polyDataList.append(polyData)
-        else :
-            if config.DoIntegrate():
-                integrate.integrate(polyData, config)
-            if args.openGL_GUI :
-                vtkDisplay.RenderAndInteracte(polyData ,config , args.variableToDisplay )
-    if args.concatenate :
-        removeDupliatePoints = False
-        polyDataConcatenated = vtkHelper.concatenatePolyData( polyDataList, removeDupliatePoints)
-        if config.DoIntegrate():
-            integrate.integrate(polyDataConcatenated, config)
-    
-        if not args.translate == [0., 0., 0.] :
-            pass # TODO
-        if not args.translate == [1., 0., 0., 0., 1., 0., 0., 0., 1.]  :
-            pass # TODO
-        if not config.no_write_vtk:
-            vtk_file_name = os.path.join( os.getcwd() , "%s-%s.vtk"%(config.outPutName, "concat") )
-            print('writting: %s'%vtk_file_name)
-            if len(args.list_variableToKeepForWriting ):
-                polyDataConcatenated = vtkHelper.getPolyDataCroppedFromData(polyDataConcatenated, args.list_variableToKeepForWriting )
-            writer = vtk.vtkPolyDataWriter()
-            writer.SetInputData(polyDataConcatenated)
-            writer.SetFileName(vtk_file_name )
-            writer.SetFileTypeToBinary()
-            writer.Write()
-        if args.openGL_GUI :
-            vtkDisplay.RenderAndInteracte(polyDataConcatenated , config , args.variableToDisplay )
+        polyDataList.append(polyData)
             
-        if not args.extractFromCVS == "" :
-            vtkHelper.ExtractDataFromTheClosestCellCenter( polyDataConcatenated ,  args.extractFromCVS)
+    # 
+    removeDupliatePoints = False
+    polyDataConcatenated = vtkHelper.concatenatePolyData( polyDataList, removeDupliatePoints)
+    # 
+    if config.DoIntegrate():
+        integrate.integrate(polyDataConcatenated, config)
+
+    if not args.translate == [0., 0., 0.] :
+        pass # TODO
+    if not args.translate == [1., 0., 0., 0., 1., 0., 0., 0., 1.]  :
+        pass # TODO
+    if not config.no_write_vtk:
+        vtk_file_name = os.path.join( os.getcwd() , "%s.vtk"%(config.outPutName) )
+        print('writting: %s'%vtk_file_name)
+        if len(args.list_variableToKeepForWriting ):
+            polyDataConcatenated = vtkHelper.getPolyDataCroppedFromData(polyDataConcatenated, args.list_variableToKeepForWriting )
+        writer = vtk.vtkPolyDataWriter()
+        writer.SetInputData(polyDataConcatenated)
+        writer.SetFileName(vtk_file_name )
+        writer.SetFileTypeToBinary()
+        writer.Write()
+        
+    if args.openGL_GUI :
+        vtkDisplay.RenderAndInteracte(polyDataConcatenated , config , args.variableToDisplay )
+        
+    if not args.extractFromCVS == "" :
+        vtkHelper.ExtractDataFromTheClosestCellCenter( polyDataConcatenated ,  args.extractFromCVS)
   
 main()
         

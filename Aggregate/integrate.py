@@ -239,17 +239,19 @@ def translateCenters(df, xcog, ycog, zcog):
     return df 
 
 def plotIntegration(df, config):
-    Yvars = []
+    variable_to_plots = []
     if config.IsPressureIntegrationPossible() or config.IsViscousIntegrationPossible() :
         for j in config.infixes : 
             varTot= "%s%s%s"%("C",j,"")
             varP  = "%s%s%s"%("C",j,"P")
             varV  = "%s%s%s"%("C",j,"V")
-            Yvars.append(varTot)
+            variable_to_plots.append(varTot)
             if config.IsPressureIntegrationPossible() :
-                Yvars.append(varP)
+                variable_to_plots.append(varP)
             if config.IsViscousIntegrationPossible() :
-                Yvars.append(varV)
+                variable_to_plots.append(varV)
+    if len(variable_to_plots) == 0 :
+        return 0 
     # A/R 
     height= 1050
     width= 1680 
@@ -257,7 +259,9 @@ def plotIntegration(df, config):
     import matplotlib.pyplot as plt
     fig, axarr = plt.subplots(2,  figsize=(width / scale_ratio ,height/ scale_ratio),  gridspec_kw = {'height_ratios':[4, 6 ] } )
     # 
-    YS = [Yvars ] 
+    YS = [variable_to_plots ] 
+    print(YS)
+    print(YS)
     vals = list(CellOrientationXYZ.labels.values())
     i = 0
     for j in range(len(YS)) : 
@@ -274,7 +278,7 @@ def plotIntegration(df, config):
     fig.suptitle( config.outPutName) 
     filename = "%s.png"%(config.outPutName) 
     fig.savefig(filename ) 
-    print("plot in : %s"% filename)  
+    print("wrote plot in : %s"% filename)  
     plt.close('all') 
 
 def integrate(polyData, config ):        

@@ -17,7 +17,24 @@ def PrintDataArrays(polyData  ):
     for nameVar in nameVars : 
         print("%15s %s"%(" ", nameVar))
 
-def setVariableToDisplay(config , polyData , variableToDisplay ):
+def isVariableInPolyDataCellData(polyData , variableToDisplay  ):
+    Narray = polyData.GetCellData().GetNumberOfArrays()
+    nameVars = [] 
+    foundVariable = False 
+    for i in range(0, Narray ):
+        nameVar = polyData.GetCellData().GetArrayName(i)
+        nameVars.append(nameVar)
+    for nameVar in nameVars : 
+        if variableToDisplay == nameVar :
+            foundVariable = True 
+            break 
+    return foundVariable
+
+
+def setVariableToDisplay(config , polyData , variableToDisplay = "Normal"):
+    if not isVariableInPolyDataCellData (polyData , variableToDisplay ):
+        print("Could not find variable to display: %s"%variableToDisplay)
+        exit(1)
     display_variable = False 
     Narray = polyData.GetCellData().GetNumberOfArrays()
     nameVars = [] 
@@ -39,6 +56,8 @@ def setVariableToDisplay(config , polyData , variableToDisplay ):
             VARIABLE = "direction [-]"
             display_variable = True 
             print("%15s %s"%("SELECTED -> ", nameVar))
+    if not display_variable :
+        print("Display %s"%VARIABLE)
     return display_variable , VARIABLE 
 
 def lookUpTable( lutNum , lookupStyle , reverse = False ):
@@ -98,22 +117,23 @@ def lookUpTable( lutNum , lookupStyle , reverse = False ):
         lut.SetTableValue(ii, cc[0], cc[1], cc[2], 1.0) 
     return lut 
     
-def RenderAndInteracte(input , config , variableToDisplay ) : 
-    display_variable , VARIABLE = setVariableToDisplay(config , input , variableToDisplay )
-    input.GetCellData().SetActiveScalars(VARIABLE)
+def RenderAndInteracte(polyData , config , VARIABLE ) : 
+    if isVariableInPolyDataCellData(polyData , VARIABLE )  : 
+        polyData.GetCellData().SetActiveScalars(VARIABLE)
+    # 
     mapMesh = vtk.vtkDataSetMapper()
     #mapMesh = vtk.vtkPolyDataMapper()
-    mapMesh.SetInputData(input)
-    if display_variable :
-        mapMesh.SetScalarRange(input.GetCellData().GetArray(VARIABLE).GetRange())
-    mapMesh.SetScalarModeToUseCellData()
     
-    lut = lookUpTable( lookupStyle = "Rainbow Blended White" ,lutNum = 32) 
-    minvalue = input.GetCellData().GetArray(VARIABLE).GetRange()[0]
-    maxvalue = input.GetCellData().GetArray(VARIABLE).GetRange()[1]
-    lut.SetRange(minvalue, maxvalue) 
-    lut.Build()
-    mapMesh.SetLookupTable(lut)
+    mapMesh.SetInputData(polyData)
+    if isVariableInPolyDataCellData(polyData , VARIABLE )  : 
+        mapMesh.SetScalarRange(polyData.GetCellData().GetArray(VARIABLE).GetRange())
+        mapMesh.SetScalarModeToUseCellData()
+        lut = lookUpTable( lookupStyle = "Rainbow Blended White" ,lutNum = 32) 
+        minvalue = polyData.GetCellData().GetArray(VARIABLE).GetRange()[0]
+        maxvalue = polyData.GetCellData().GetArray(VARIABLE).GetRange()[1]
+        lut.SetRange(minvalue, maxvalue) 
+        lut.Build()
+        mapMesh.SetLookupTable(lut)
 
     meshActor = vtk.vtkActor()
     meshActor.SetMapper(mapMesh)
@@ -131,17 +151,18 @@ def RenderAndInteracte(input , config , variableToDisplay ) :
     ren.SetBackground(0, 0, 0)
     renWin.SetSize(1650, 1050)
  
-    # create the scalar_bar
-    scalar_bar = vtk.vtkScalarBarActor()
-    scalar_bar.SetOrientationToHorizontal()
-    scalar_bar.SetLookupTable(lut)
-    
-    # create the scalar_bar_widget
-    scalar_bar_widget = vtk.vtkScalarBarWidget()
-    scalar_bar_widget.SetInteractor(iren)
-    scalar_bar_widget.SetScalarBarActor(scalar_bar)
-    scalar_bar_widget.On()
-    scalar_bar.SetTitle(VARIABLE)
+    if isVariableInPolyDataCellData(polyData , VARIABLE )  : 
+        # create the scalar_bar
+        scalar_bar = vtk.vtkScalarBarActor()
+        scalar_bar.SetOrientationToHorizontal()
+        scalar_bar.SetLookupTable(lut)
+        
+        # create the scalar_bar_widget
+        scalar_bar_widget = vtk.vtkScalarBarWidget()
+        scalar_bar_widget.SetInteractor(iren)
+        scalar_bar_widget.SetScalarBarActor(scalar_bar)
+        scalar_bar_widget.On()
+        scalar_bar.SetTitle(VARIABLE)
 
     ren.ResetCamera()
     ren.GetActiveCamera().Zoom(1)

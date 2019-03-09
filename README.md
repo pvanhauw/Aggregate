@@ -1,5 +1,8 @@
 # Aggregate
-python post processing tool based on vtk and pandas to derive aerodynamic coefficients from triangular surfaces input(s) 
+Python post processing aerodynamic tool based on vtk and pandas that: 
+* derive (integrate) aerodynamic coefficients from triangular surfaces input(s) 
+* transform data 
+* probe the closest data point 
 
 ## Table of contents
 * [TODO](#todo)
@@ -7,6 +10,7 @@ python post processing tool based on vtk and pandas to derive aerodynamic coeffi
    * [Integrate](#integrate)
    * [Concatenate files](#concatenate-files)
    * [Visualize data](#visualize-data)
+   * [Transform data](#transform-data)
    * [Complete exemple](#complete-exemple)
 * [Usage](#usage)
 * [Dependancies](#dependancies)
@@ -17,11 +21,10 @@ python post processing tool based on vtk and pandas to derive aerodynamic coeffi
  - Add test 
  - Finish readme and documentation (transformation, data extraction using a serie of point) 
  - fix (reverse)-noAutoOrient
- - 
 ## Exemples
 
 ### Integrate
-Input used in command lini: 
+Input used in command line: 
 - 5 files 
 - variables used for integration. Some defaut values are omitted, [see Usage for detail](#usage) 
 
@@ -80,6 +83,33 @@ Available data
 ```
 ![exemple1](./images/exemple1.png)
 
+
+
+### Transform data
+Read files, translate and/or rotate and/or scale them. Translation (-t) is applied first, then matrix transformation (-r) , then rotation around x (-rx)  , then rotation around y (-ry)  , then rotation around z (-rz) 
+
+#### translation of [0 , 7 , 2 ]
+```
+python3 Aggregate/core.py -i  data/xcore-F1000-0.vtk data/xpanel*  -t 0 7 2 
+```
+
+#### mirror with respect to Y, scaling of 2 in the x direction 
+```
+python3 Aggregate/core.py -i  data/xcore-F1000-0.vtk data/xpanel*  -r 2 0 0 0 -1 0 0 0 1 
+```
+```
+Apply : X = R * X with 
+    [2.0, 0.0 0.0]
+R = [0.0, -1.0 0.0]
+    [0.0, 0.0 1.0]
+
+```
+
+#### rotation of 50 [deg] around oX 
+```
+python3 Aggregate/core.py -i  data/xcore-F1000-0.vtk data/xpanel*  -rx 50 
+```
+
   
 ### Complete exemple 
 TODO
@@ -123,8 +153,8 @@ usage: core.py [-h] -i LIST_INPUT [LIST_INPUT ...] [-f FORCEFORMAT]
 | -k | List of variable to keep in the output |  | data manipulation |
 | -t | transalate inputs by tx, ty, tz | 0., 0., 0.  | data manipulation |
 | -r | apply matrix on the inputs: [[r11 r12 r13][r21 r22 r23][r31 r32 r33]]| 0., 0., 0., 0., 0., 0. 0., 0., 0. | data manipulation |
-| -gl | display data | disable  | vizualisatoin |
-| -glvar | variable to display |   | vizualisatoin |
+| -gl | display data | disable  | visualization |
+| -glvar | variable to display |   | visualization |
 
 
 

@@ -159,6 +159,9 @@ def main():
     parser.add_argument("-t", "--translate" , nargs=3, metavar=('tx', 'ty', 'tz'), help="translate by (tx, ty, tz)", type=float, default=[0., 0., 0.] , required = False )
     parser.add_argument("-r", "--rotate", nargs=9, metavar=('r11', 'r12', 'r13','r21', 'r22', 'r23','r31', 'r32', 'r33',), 
                         help="Apply R * X, with [r11 r12 r13, r21 r22 r23, r31 r32 r33]", type=float, default=[1., 0., 0., 0., 1., 0., 0., 0., 1.] , required = False )
+    parser.add_argument("-rx", help="rotation around ox of angle arg" , type = float , default = 0. ) 
+    parser.add_argument("-ry", help="rotation around oy of angle arg" , type = float , default = 0. ) 
+    parser.add_argument("-rz", help="rotation around oz of angle arg" , type = float , default = 0. ) 
     parser.add_argument("-nw", "--no_write_vtk" , help="do not write vtk output when concatening" ,  action="store_true") 
     parser.add_argument("-glvar", "--variableToDisplay" , help="variable that will be displayed when using the rendering  window" ,   type = str , default = "") 
     parser.add_argument("-gl", "--openGL_GUI", help="launch openGL window to vizualize your data",action="store_true") 
@@ -191,25 +194,25 @@ def main():
         polyData = vtkHelper.getPolyDataByLoadingFile(absolutePath , args.forceFormat )
         vtkDisplay.PrintDataArrays(polyData)
         # create and recover normals 
-        polyData = vtkHelper.appendNormal(polyData, config.verbose, config.autoOrient )
+        if config.DoIntegrate():
+            polyData = vtkHelper.appendNormal(polyData, config.verbose, config.autoOrient )
         polyDataList.append(polyData)
-            
     # 
-    removeDupliatePoints = False
+    removeDupliatePoints = False 
     polyDataConcatenated = vtkHelper.concatenatePolyData( polyDataList, removeDupliatePoints)
-    # 
+    #
+    polyDataConcatenated = vtkHelper.Transform(polyDataConcatenated , args)
+    #
     if config.DoIntegrate():
         integrate.integrate(polyDataConcatenated, config)
-
-    if not args.translate == [0., 0., 0.] :
-        pass # TODO
-    if not args.translate == [1., 0., 0., 0., 1., 0., 0., 0., 1.]  :
-        pass # TODO
+        
     if not config.no_write_vtk:
         vtk_file_name = os.path.join( os.getcwd() , "%s.vtk"%(config.outPutName) )
         print('writting: %s'%vtk_file_name)
         if len(args.list_variableToKeepForWriting ):
             polyDataConcatenated = vtkHelper.getPolyDataCroppedFromData(polyDataConcatenated, args.list_variableToKeepForWriting )
+        if config.IsViscousIntegrationPossible() :
+            polyDataConcatenated = vtkHelper.appendFrictionVector(polyDataConcatenated, config  )
         writer = vtk.vtkPolyDataWriter()
         writer.SetInputData(polyDataConcatenated)
         writer.SetFileName(vtk_file_name )

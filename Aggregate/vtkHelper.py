@@ -141,68 +141,6 @@ def getDataFrameGeo(polyData, verbose, reverse_normal):
     df = pd.DataFrame(dict_new)
     return df
 
-
-def getPolyDataByLoadingFile(absolutePathName, fileExtention=""):
-        # test if file exists
-        if not os.path.isfile(absolutePathName):
-            raise Exception(
-                'File {:s} does not exist'.format(absolutePathName))
-        # Get extension
-        basename = os.path.basename(absolutePathName)
-        if fileExtention == "":
-            splitname = basename.split(".")
-            if len(splitname) < 2:
-                print("Could not detect the file extension of {:s}".format(
-                    absolutePathName))
-                exit()
-            fileExtention = splitname[-1]
-        else:
-            print("FORCED using file extension: {:s}".format(absolutePathName))
-        # Select reader
-        if fileExtention == 'ply':
-            reader = vtk.vtkPLYReader()
-        elif fileExtention == 'stl':
-            reader = vtk.vtkSTLReader()
-        elif fileExtention == 'vtk':
-            reader = vtk.vtkPolyDataReader()
-        elif fileExtention == 'vtu':
-            # reader = vtk.vtkUnstructuredGridReader()
-            reader = vtk.vtkXMLUnstructuredGridReader()
-            # reader = vtk.vtkXMLReader()
-        elif fileExtention == 'pvd' or fileExtention == 'pvtu':
-            reader = vtk.vtkXMLPUnstructuredGridReader()
-        elif fileExtention == 'vtp':
-            reader = vtk.vtkPolyDataMapper()
-        else:
-            raise Exception(
-                'Filetype ({:s}) must be either "ply", "stl", "vtk", "vtu", "vtp" '.format(fileExtention))
-        print("Reading: {:s}".format(absolutePathName))
-        # Load file
-        reader.SetFileName(absolutePathName)
-        reader.Update()
-        output = reader.GetOutput()
-        # uGrid -> polydata
-        dsSurfaceFilt = vtk.vtkDataSetSurfaceFilter()
-        dsSurfaceFilt.SetInputData(output)
-        dsSurfaceFilt.Update()
-        vtkPolyData = dsSurfaceFilt.GetOutput()
-        return vtkPolyData
-
-
-def writePolyData(polyData, relativePath, outputFormat):
-    relativePathBase = relativePath.split(".")
-    relativePath = "%s.%s" % (relativePathBase[:-1].Join(), outputFormat)
-    if outputFormat == "vtp":
-        writer = vtk.vtkXMLUnstructuredGridWriter()
-    else:
-        raise Exception(
-            'Output type ({:s}) unknowed. Type must be either "ply", "stl", "vtk", "vtu", "vtp", "tria" '.format(outputFormat))
-
-    writer.SetFileName(relativePath)
-    writer.SetDataModeToAscii()
-    writer.Update()
-
-
 def getPolyDataCroppedFromData(polyData, list_variableToKeepForWriting):
     Narray = polyData.GetCellData().GetNumberOfArrays()
     nameVars = []
@@ -237,71 +175,6 @@ def appendFrictionVector(polyData, config):
     for i in range (0 , nbOfCells) : # so slow !!! , numpize this ! 
         pcoords.InsertNextTuple3( cfxs[i] , cfys[i] , cfzs[i]  ) ; 
     polyData.GetCellData().AddArray(pcoords) 
-    return polyData
-
-# Apply a vtkTransform on a vtkPolyData and return a vtkPolyData
-def ApplyTransformationOnPolyData(polyData , transform): 
-    transformFilter = vtk.vtkTransformPolyDataFilter() 
-    transformFilter.SetTransform(transform  )
-    transformFilter.SetInputData(0, polyData )  
-    transformFilter.Update() 
-    return transformFilter.GetOutput()
-
-# Apply a vtkTransform on a vtkPolyData and return a vtkPolyData
-def Transform(polyData , args ): 
-    if not args.translate == [0., 0., 0.] :
-        transform = vtk.vtkTransform()
-        tx = args.translate[0]
-        ty = args.translate[1]
-        tz = args.translate[2]
-        transform.Translate( tx,  ty , tz  ) 
-        print("translating of : [%s, %s %s] ..."%(tx,ty,tz))
-        polyData = ApplyTransformationOnPolyData(polyData, transform)
-    if not args.rotate == [1., 0., 0., 0., 1., 0., 0., 0., 1.]  :
-        transform = vtk.vtkTransform()
-        matrix4x4 = vtk.vtkMatrix4x4() 
-        # http://www.glprogramming.com/red/appendixf.html#name1
-        # row, col, val
-        matrix4x4.SetElement(0,0, args.rotate[0] ) 
-        matrix4x4.SetElement(0,1, args.rotate[1] ) 
-        matrix4x4.SetElement(0,2, args.rotate[2] ) 
-        matrix4x4.SetElement(1,0, args.rotate[3] )  
-        matrix4x4.SetElement(1,1, args.rotate[4] ) 
-        matrix4x4.SetElement(1,2, args.rotate[5] ) 
-        matrix4x4.SetElement(2,0, args.rotate[6] )  
-        matrix4x4.SetElement(2,1, args.rotate[7] ) 
-        matrix4x4.SetElement(2,2, args.rotate[8] ) 
-        # T = (0,0,0) : no translation 
-        matrix4x4.SetElement(0,3, 0. )  
-        matrix4x4.SetElement(1,3, 0. )  
-        matrix4x4.SetElement(2,3, 0. )  
-        matrix4x4.SetElement(3,0, 0. )  
-        matrix4x4.SetElement(3,1, 0. )  
-        matrix4x4.SetElement(3,2, 0. )  
-        matrix4x4.SetElement(3,3, 1 )  
-        transform.SetMatrix(matrix4x4) 
-        print("Apply : X = R * X with \n    [%s, %s %s]\nR = [%s, %s %s]\n    [%s, %s %s]"%(
-            args.rotate[0],  args.rotate[1],  args.rotate[2],  
-            args.rotate[3],  args.rotate[4],  args.rotate[5],  
-            args.rotate[6],  args.rotate[7],  args.rotate[8])) 
-        polyData = ApplyTransformationOnPolyData(polyData, transform)
-
-    if not args.rx == 0.  : 
-        transform = vtk.vtkTransform()
-        transform.RotateX(args.rx) 
-        print("rotation around ox of %s [deg] ..."%(args.rx))
-        polyData = ApplyTransformationOnPolyData(polyData, transform)
-    if not args.ry == 0.  : 
-        transform = vtk.vtkTransform()
-        transform.RotateY(args.ry) 
-        print("rotation around oy of %s [deg] ..."%(args.ry))
-        polyData = ApplyTransformationOnPolyData(polyData, transform)
-    if not args.rz == 0.  : 
-        transform = vtk.vtkTransform()
-        transform.RotateX(args.rz) 
-        print("rotation around oz of %s [deg] ..."%(args.rz))
-        polyData = ApplyTransformationOnPolyData(polyData, transform)
-
     return polyData
     
 def ExtractDataFromTheClosestCellCenter( polyData ,  cvsFilePath) :
@@ -360,7 +233,7 @@ def ExtractDataFromTheClosestCellCenter( polyData ,  cvsFilePath) :
         # print(croppedData.shape)
         # get ride of vect 
         if len(croppedData.shape ) == 1  :
-            print( "append varaible : %s"% var )
+            print( "append variaoble : %s"% var )
             datas.append(croppedData)
             dict_new[var ] = croppedData
     # write data 
@@ -382,5 +255,3 @@ def ExtractDataFromTheClosestCellCenter( polyData ,  cvsFilePath) :
     return polyDataProbeLocation
         
     
-    
-        

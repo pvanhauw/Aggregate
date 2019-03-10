@@ -1,8 +1,8 @@
 # Aggregate
 Python post processing aerodynamic tool based on vtk and pandas that: 
-* derive (integrate) aerodynamic coefficients from triangular surfaces input(s) 
-* transform data 
-* probe the closest data point 
+* Derive (integrate) aerodynamic coefficients from triangular surfaces input(s) 
+* Transform data 
+* Probe the closest data points 
 
 ## Table of contents
 * [TODO](#todo)
@@ -139,10 +139,10 @@ usage: core.py [-h] -i LIST_INPUT [LIST_INPUT ...] [-f FORCEFORMAT]
 | Arguments | Description | Default value | Purpose|
 | --- | --- | --- | ---| 
 | -i | List of input files. Required|  |  |
-| -Cp | Variable to use as pressure coefficient | | integration |
-| -Cfx| Variable to use as frictions coefficient in the x-direction | | integration |
-| -Cfy| Variable to use as frictions coefficient in the y-direction | | integration |
-| -Cfz| Variable to use as frictions coefficient in the z-direction | | integration |
+| -Cp | Variable defining the pressure coefficient | | integration |
+| -Cfx| Variable defining the frictions coefficient in the x-direction | | integration |
+| -Cfy| Variable defining the fictions coefficient in the y-direction | | integration |
+| -Cfz| Variable defining the frictions coefficient in the z-direction | | integration |
 | -q  | Variable (unit_q per unit of surface) to integrate, eg [W/m2]  | | integration |
 | -Lref | Length of reference used to scale the moment: (Cm,Cl,Cn)  | 1 | integration |
 | -Sref | Surface of reference used to scale all the coefficents:\n Cx, Cy, Cz, Cm,Cl,Cn, ...  | 1 | integration |
@@ -153,13 +153,14 @@ usage: core.py [-h] -i LIST_INPUT [LIST_INPUT ...] [-f FORCEFORMAT]
 | -reverse_normal | Reverse the orientation of the normals | disable | integration |
 | -o | Base name of the output file: .csv, .xls, .vtk, .png | output | data manipulation |
 | -k | List of variable to keep in the output |  | data manipulation |
-| -t | Translate inputs by tx, ty, tz | 0., 0., 0.  | data manipulation |
-| -r | Apply matrix on the inputs: [[r11 r12 r13][r21 r22 r23][r31 r32 r33]]| 1., 0., 0., 0., 1., 0., 0., 0., 1. | data manipulation |
+| -t | Translation vector: tx, ty, tz | 0., 0., 0.  | data manipulation |
+| -r | Transformation Matrix R = [[r11 r12 r13][r21 r22 r23][r31 r32 r33]] | 1., 0., 0., 0., 1., 0., 0., 0., 1. | data manipulation |
 | -rx | Rotate around ox with angle rx [deg] | 0. | data manipulation |
 | -ry | Rotate around oy with angle ry [deg] | 0. | data manipulation |
 | -rz | Rotate around oz with angle rz [deg] | 0. | data manipulation |
 | -gl | Display data | disable  | visualization |
 | -glvar | Variable to display |   | visualization |
+| -e | path to csv file where (x,y,z) coordinate are defined |   | data probing |
 
 
 

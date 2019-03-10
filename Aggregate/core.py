@@ -9,7 +9,9 @@ from argparse import RawTextHelpFormatter
 import vtk 
 #from Aggregate.geometry.Point import Point
 
-import vtkDisplay as vtkDisplay
+import vtkDisplay
+import vtkTransform
+import vtkIO 
 import vtkHelper
 import integrate
 #https://www.programcreek.com/python/example/108192/vtk.util.numpy_support.vtk_to_numpy
@@ -191,7 +193,7 @@ def main():
     polyDataList = []
     for relativePath in list_input :
         absolutePath = os.path.join(cwd, relativePath)
-        polyData = vtkHelper.getPolyDataByLoadingFile(absolutePath , args.forceFormat )
+        polyData = vtkIO.getPolyDataByLoadingFile(absolutePath , args.forceFormat )
         vtkDisplay.PrintDataArrays(polyData)
         # create and recover normals 
         if config.DoIntegrate():
@@ -201,23 +203,18 @@ def main():
     removeDupliatePoints = False 
     polyDataConcatenated = vtkHelper.concatenatePolyData( polyDataList, removeDupliatePoints)
     #
-    polyDataConcatenated = vtkHelper.Transform(polyDataConcatenated , args)
+    polyDataConcatenated = vtkTransform.Transform(polyDataConcatenated , args)
     #
     if config.DoIntegrate():
         integrate.integrate(polyDataConcatenated, config)
     # 
     if not config.no_write_vtk:
-        vtk_file_name = os.path.join( os.getcwd() , "%s.vtk"%(config.outPutName) )
-        print('writting: %s'%vtk_file_name)
+        vtk_file_name = os.path.join( os.getcwd() , "%s.vtp"%(config.outPutName) )
         if len(args.list_variableToKeepForWriting ):
             polyDataConcatenated = vtkHelper.getPolyDataCroppedFromData(polyDataConcatenated, args.list_variableToKeepForWriting )
         if config.IsViscousIntegrationPossible() :
             polyDataConcatenated = vtkHelper.appendFrictionVector(polyDataConcatenated, config  )
-        writer = vtk.vtkPolyDataWriter()
-        writer.SetInputData(polyDataConcatenated)
-        writer.SetFileName(vtk_file_name )
-        writer.SetFileTypeToBinary()
-        writer.Write()
+        vtkIO.writePolyData(polyDataConcatenated, vtk_file_name, "vtk")
     #        
     if not args.extractFromCVS == "" :
         polyDataProbeLocation = vtkHelper.ExtractDataFromTheClosestCellCenter( polyDataConcatenated ,  args.extractFromCVS)

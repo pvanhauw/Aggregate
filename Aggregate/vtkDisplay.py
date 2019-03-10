@@ -117,10 +117,9 @@ def lookUpTable( lutNum , lookupStyle , reverse = False ):
         lut.SetTableValue(ii, cc[0], cc[1], cc[2], 1.0) 
     return lut 
     
-def RenderAndInteracte(polyData , config , VARIABLE , pointCloud) : 
+def RenderAndInteracte(polyData , config , VARIABLE , polyDataProbeLocation) : 
     if isVariableInPolyDataCellData(polyData , VARIABLE )  : 
         polyData.GetCellData().SetActiveScalars(VARIABLE)
-    # 
     mapMesh = vtk.vtkDataSetMapper()
     #mapMesh = vtk.vtkPolyDataMapper()
     
@@ -146,20 +145,17 @@ def RenderAndInteracte(polyData , config , VARIABLE , pointCloud) :
     iren = vtk.vtkRenderWindowInteractor()
     iren.SetRenderWindow(renWin)
 
-    if not pointCloud == None : 
-        # Renderer
+    # append visualization of the probe location 
+    if not polyDataProbeLocation == None : 
         mapMesh2 = vtk.vtkDataSetMapper()
-        mapMesh2.SetInputData(pointCloud) 
+        mapMesh2.SetInputData(polyDataProbeLocation) 
         meshActor2 = vtk.vtkActor()
         meshActor2.SetMapper(mapMesh2)
         meshActor2.GetProperty().SetPointSize(10)
         colors = vtk.vtkNamedColors()
         meshActor2.GetProperty().SetColor(colors.GetColor3d("Tomato"))
-        
         ren.AddActor(meshActor2)
         print("append points ")
-    else : 
-        print("not append points ")
 
    
     # Add the actors to the renderer, set the background and size

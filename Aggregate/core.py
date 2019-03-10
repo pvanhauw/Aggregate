@@ -205,7 +205,7 @@ def main():
     #
     if config.DoIntegrate():
         integrate.integrate(polyDataConcatenated, config)
-        
+    # 
     if not config.no_write_vtk:
         vtk_file_name = os.path.join( os.getcwd() , "%s.vtk"%(config.outPutName) )
         print('writting: %s'%vtk_file_name)
@@ -218,15 +218,14 @@ def main():
         writer.SetFileName(vtk_file_name )
         writer.SetFileTypeToBinary()
         writer.Write()
-        
-        
+    #        
     if not args.extractFromCVS == "" :
-        pointCloud = vtkHelper.ExtractDataFromTheClosestCellCenter( polyDataConcatenated ,  args.extractFromCVS)
+        polyDataProbeLocation = vtkHelper.ExtractDataFromTheClosestCellCenter( polyDataConcatenated ,  args.extractFromCVS)
     else : 
-        pointCloud = None
-
+        polyDataProbeLocation = None
+    # 
     if args.openGL_GUI :
-        vtkDisplay.RenderAndInteracte(polyDataConcatenated , config , args.variableToDisplay , pointCloud)
+        vtkDisplay.RenderAndInteracte(polyDataConcatenated , config , args.variableToDisplay , polyDataProbeLocation)
   
 main()
         

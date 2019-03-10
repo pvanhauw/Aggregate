@@ -376,10 +376,10 @@ def ExtractDataFromTheClosestCellCenter( polyData ,  cvsFilePath) :
         pid = [0]
         pid[0] = vtkPoints.InsertNextPoint(  point)
         vertices.InsertNextCell( 1, pid)
-    pointCloud = vtk.vtkPolyData()
-    pointCloud.SetPoints(vtkPoints)
-    pointCloud.SetVerts(vertices)
-    return pointCloud
+    polyDataProbeLocation = vtk.vtkPolyData()
+    polyDataProbeLocation.SetPoints(vtkPoints)
+    polyDataProbeLocation.SetVerts(vertices)
+    return polyDataProbeLocation
         
     
     

@@ -19,7 +19,7 @@ Python post processing aerodynamic tool based on vtk and pandas that:
 ## TODO
  - Implement and test "reverse_aero_convention". Only alpha=beta=0 has been tested
  - Add test 
- - Finish readme and documentation (transformation, data extraction using a serie of point) 
+ - Finish readme and documentation (data extraction using a serie of point) 
  - fix (reverse)-noAutoOrient
 ## Exemples
 
@@ -46,6 +46,7 @@ plot in : output.png
 
 
 ### Concatenate files
+Data get concatenated only if the same data exist in each file. If not no data is included 
 ```
 python3 Aggregate/core.py -i  data/xcore-F1000-0.vtk data/xpanel*  
 ```
@@ -130,11 +131,12 @@ usage: core.py [-h] -i LIST_INPUT [LIST_INPUT ...] [-f FORCEFORMAT]
                [-alpha ALPHA_DEG] [-beta BETA_DEG] [-cog xcog ycog zcog]
                [-Sref SREF] [-Lref LREF] [-reverse_normal]
                [-reverse_aero_convention] [-autoOrient] [-t tx ty tz]
-               [-r r11 r12 r13 r21 r22 r23 r31 r32 r33] [-v] [-nw]
-               [-glvar VARIABLETODISPLAY] [-gl] [-e EXTRACTFROMCVS]
+               [-r r11 r12 r13 r21 r22 r23 r31 r32 r33] [-rx RX] [-ry RY]
+               [-rz RZ] [-nw] [-glvar VARIABLETODISPLAY] [-gl]
+               [-e EXTRACTFROMCVS] [-v]
 ```
 
-| Arguments | Description | default value | purpose|
+| Arguments | Description | Default value | Purpose|
 | --- | --- | --- | ---| 
 | -i | List of input files. Required|  |  |
 | -Cp | Variable to use as pressure coefficient | | integration |
@@ -146,15 +148,18 @@ usage: core.py [-h] -i LIST_INPUT [LIST_INPUT ...] [-f FORCEFORMAT]
 | -Sref | Surface of reference used to scale all the coefficents:\n Cx, Cy, Cz, Cm,Cl,Cn, ...  | 1 | integration |
 | -alpha | Angle of attack [deg] | 0 | integration |
 | -beta | Angle of side-slip [deg]| 0 | integration |
-| -cog | coordinate of the center of gravity used to compute the moment | 0. ,0. ,0.  | integration |
+| -cog | Coordinate of the center of gravity used to compute the moment | 0. ,0. ,0.  | integration |
 | -noAutoOrient| Do not auto orient the surface of the triangle for every single input file individually (vtk AutoOrientNormalsOn) | disable | integration |
-| -reverse_normal | Revrse the orientation of the normals | disable | integration |
-| -o | base name of the output file: .csv, .xls, .vtk, .png | output | data manipulation |
+| -reverse_normal | Reverse the orientation of the normals | disable | integration |
+| -o | Base name of the output file: .csv, .xls, .vtk, .png | output | data manipulation |
 | -k | List of variable to keep in the output |  | data manipulation |
-| -t | transalate inputs by tx, ty, tz | 0., 0., 0.  | data manipulation |
-| -r | apply matrix on the inputs: [[r11 r12 r13][r21 r22 r23][r31 r32 r33]]| 0., 0., 0., 0., 0., 0. 0., 0., 0. | data manipulation |
-| -gl | display data | disable  | visualization |
-| -glvar | variable to display |   | visualization |
+| -t | Translate inputs by tx, ty, tz | 0., 0., 0.  | data manipulation |
+| -r | Apply matrix on the inputs: [[r11 r12 r13][r21 r22 r23][r31 r32 r33]]| 1., 0., 0., 0., 1., 0., 0., 0., 1. | data manipulation |
+| -rx | Rotate around ox with angle rx [deg] | 0. | data manipulation |
+| -ry | Rotate around oy with angle ry [deg] | 0. | data manipulation |
+| -rz | Rotate around oz with angle rz [deg] | 0. | data manipulation |
+| -gl | Display data | disable  | visualization |
+| -glvar | Variable to display |   | visualization |
 
 
 

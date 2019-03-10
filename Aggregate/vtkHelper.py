@@ -302,10 +302,7 @@ def Transform(polyData , args ):
         print("rotation around oz of %s [deg] ..."%(args.rz))
         polyData = ApplyTransformationOnPolyData(polyData, transform)
 
-
-        
     return polyData
-    
     
 def ExtractDataFromTheClosestCellCenter( polyData ,  cvsFilePath) :
     # load df 
@@ -341,11 +338,13 @@ def ExtractDataFromTheClosestCellCenter( polyData ,  cvsFilePath) :
     kDTree.BuildLocatorFromPoints(points)
     # TODO check header variables : existence of x y z 
     ids = []
+    points = []
     for index, row in df.iterrows():
         x = row['x [m]']
         y = row['y [m]']
         z = row['z [m]']
-        points = [x , y , z ]
+        point = [x , y , z ]
+        points.append(point)
         closestPointDist =  vtk.reference(0.0) 
         testPoint = [ x ,y ,z ] 
         id = kDTree.FindClosestPoint(testPoint, closestPointDist)
@@ -370,10 +369,18 @@ def ExtractDataFromTheClosestCellCenter( polyData ,  cvsFilePath) :
     filename = "interpolation.csv"
     df_appened.to_csv(filename ) 
     print("wrote interpolated data info : %s"%filename)
-    
-
-
-    
+        
+    vtkPoints = vtk.vtkPoints()
+    vertices = vtk.vtkCellArray()
+    for i , point in enumerate( points ) :
+        pid = [0]
+        pid[0] = vtkPoints.InsertNextPoint(  point)
+        vertices.InsertNextCell( 1, pid)
+    pointCloud = vtk.vtkPolyData()
+    pointCloud.SetPoints(vtkPoints)
+    pointCloud.SetVerts(vertices)
+    return pointCloud
+        
     
     
         

@@ -219,11 +219,14 @@ def main():
         writer.SetFileTypeToBinary()
         writer.Write()
         
-    if args.openGL_GUI :
-        vtkDisplay.RenderAndInteracte(polyDataConcatenated , config , args.variableToDisplay )
         
     if not args.extractFromCVS == "" :
-        vtkHelper.ExtractDataFromTheClosestCellCenter( polyDataConcatenated ,  args.extractFromCVS)
+        pointCloud = vtkHelper.ExtractDataFromTheClosestCellCenter( polyDataConcatenated ,  args.extractFromCVS)
+    else : 
+        pointCloud = None
+
+    if args.openGL_GUI :
+        vtkDisplay.RenderAndInteracte(polyDataConcatenated , config , args.variableToDisplay , pointCloud)
   
 main()
         

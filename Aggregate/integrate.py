@@ -260,8 +260,6 @@ def plotIntegration(df, config):
     fig, axarr = plt.subplots(2,  figsize=(width / scale_ratio ,height/ scale_ratio),  gridspec_kw = {'height_ratios':[4, 6 ] } )
     # 
     YS = [variable_to_plots ] 
-    print(YS)
-    print(YS)
     vals = list(CellOrientationXYZ.labels.values())
     i = 0
     for j in range(len(YS)) : 
@@ -291,7 +289,7 @@ def integrate(polyData, config ):
     # append to polydata
     direction = numpy_to_vtk(df["direction"].values)
     direction.SetName("direction [-]")
-    polyData.GetCellData().AddArray(direction);
+    polyData.GetCellData().AddArray(direction)
     # integration
     df = ComputeIntegrationQOIsAllCells(df, config)
     df_integration = IntegrateOverCells(df, config.getQois())
@@ -300,14 +298,15 @@ def integrate(polyData, config ):
     for x in list(df_integration) :
         print(x)
     print(df_integration)
-    # save 
+    # save in csv line style 
     file_name = os.path.join( os.getcwd() , config.outPutName+".csv" )
     print("write integration data in : %s"% file_name)
-    # csv 
-    #df_integration.to_csv(file_name, sep=';', encoding='utf-8')
-    # csv lin style 
     df_integration_lin = ConcateRow(df_integration   )
     df_integration_lin.to_csv(file_name, sep=';', encoding='utf-8')
+    # save in xls column style
+    file_name = os.path.join( os.getcwd() , config.outPutName+".xls" )
+    print("write integration data in : %s"% file_name)
+    df_integration.to_excel(file_name,  encoding='utf-8', sheet_name = "integration")
     
     # plot 
     plotIntegration(df_integration, config)

@@ -137,7 +137,30 @@ class Config(object):
                 print ("convention std with beta non null not handled. Exit") 
                 exit(32) 
         return xE1, yE1, zE1, xE2, yE2, zE2, xE3, yE3, zE3 
+
+
+import cProfile, pstats, io
+
+def profile(fnc):
     
+    """A decorator that uses cProfile to profile a function"""
+    
+    def inner(*args, **kwargs):
+        
+        pr = cProfile.Profile()
+        pr.enable()
+        retval = fnc(*args, **kwargs)
+        pr.disable()
+        s = io.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print(s.getvalue())
+        return retval
+
+    return inner
+
+@profile
 def main(): 
     parser = argparse.ArgumentParser(description='Read surface file and integrate pressure, friction and other (eg flux)\nElement can be concatenated together provided they have the similar data', formatter_class=RawTextHelpFormatter)
     parser.add_argument("-i", "--list_input", help="list of files" ,  nargs='+', type = str , default = [] ,   required = True  )  
@@ -224,6 +247,7 @@ def main():
     if args.openGL_GUI :
         vtkDisplay.RenderAndInteracte(polyDataConcatenated , config , args.variableToDisplay , polyDataProbeLocation)
   
+
 main()
         
         

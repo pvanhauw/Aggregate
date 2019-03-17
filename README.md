@@ -1,5 +1,5 @@
 # Aggregate
-Python post processing aerodynamic tool based on vtk and pandas that: 
+Python post processing tool based on vtk and pandas that: 
 * Derive (integrate) aerodynamic coefficients from triangular surfaces input(s) 
 * Transform data 
 * Probe the closest data points 
@@ -25,8 +25,9 @@ Python post processing aerodynamic tool based on vtk and pandas that:
 
 ### Integrate
 Input used in command line: 
-- 5 files 
-- variables used for integration. Some defaut values are omitted, [see Usage for detail](#usage) 
+- 1 wall file 
+- variables used for integration.
+- Most defaut values are omitted in that exemple, [see Usage for detail](#usage) 
 
 ```
 python3 Aggregate/core.py -i data/xcore-F1000-0.vtk -Cp "Cp [-]"  -Cfx "Cfx [-]" -Cfy "Cfy [-]" -Cfz "Cfz [-]"  -q "Heat Flux: Net [W/m2]"  

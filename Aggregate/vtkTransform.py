@@ -114,10 +114,10 @@ alpha and beta define angle applied for 2 rotations, one being carried out after
 through the parameter alphaFirst 
 '''
 def GetForceVectorInAeroFrame( forceVector, alpha_deg, beta_deg, alpha_first):
-    # rotation of alpha around oy 
-    Ry = rotation_matrix( [0, 1, 0], math.radians(alpha_deg ))
-    # rotation of beta around oz
-    Rz = rotation_matrix( [0, 0, 1], math.radians(beta_deg ))
+    # rotation of -alpha around oy 
+    Ry = rotation_matrix( [0, 1, 0], math.radians(-alpha_deg ))
+    # rotation of -beta around oz
+    Rz = rotation_matrix( [0, 0, 1], math.radians(-beta_deg ))
     if alpha_first :
         forceVector_apply_first_rotation = np.dot(Ry , forceVector ) 
         forceVector_apply_second_rotation = np.dot(Rz , forceVector_apply_first_rotation ) 

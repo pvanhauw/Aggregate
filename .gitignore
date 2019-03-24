@@ -8,3 +8,8 @@
 .cache/
 build/
 .pytest_cache/
+output*
+*vtu
+*vtk
+*png
+*csv 

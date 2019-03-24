@@ -11,5 +11,7 @@ build/
 output*
 *vtu
 *vtk
+*stl
+*tria
 *png
 *csv 

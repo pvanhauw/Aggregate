@@ -17,10 +17,10 @@ Python post processing tool based on vtk and pandas that:
 
 
 ## TODO
- - Implement and test "reverse_aero_convention". Only alpha=beta=0 has been tested
- - Add test 
  - Finish readme and documentation (data extraction using a serie of point) 
- - fix (reverse)-noAutoOrient
+ - Add more ways to defined the aerodynamic frame, as well as graphical representation. Only Ry(-alpha) o Rz(-beta) is supported. 
+ - Add vizualisation for data point extraction 
+ - Add more unit test: all least one for all the exemples 
 ## Exemples
 
 ### Integrate
@@ -30,7 +30,7 @@ Input used in command line:
 - Most defaut values are omitted in that exemple, [see Usage for detail](#usage) 
 
 ```
-python3 Aggregate/core.py -i data/xcore-F1000-0.vtk -Cp "Cp [-]"  -Cfx "Cfx [-]" -Cfy "Cfy [-]" -Cfz "Cfz [-]"  -q "Heat Flux: Net [W/m2]"  
+python3 Aggregate/core.py -i data/xcore-F1000-0.vtk -Cp "Cp [-]"  -Cfx "Cfx [-]" -Cfy "Cfy [-]" -Cfz "Cfz [-]"  -q "Heat Flux: Net [W/m2]" -alpha 15 -beta 15 -Sref 9 
 ```
 
 Output:
@@ -38,8 +38,10 @@ Output:
  - one file containing the concatenated data 
 ```
 ...
-write integration data in : output.csv
-plot in : output.png
+wrote integration data in : output.csv
+wrote integration data in : output.xls
+wrote plot in : output.png
+wrote vtk data file : output.vtk
 ```
 
 

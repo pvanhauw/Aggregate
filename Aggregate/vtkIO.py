@@ -73,7 +73,6 @@ def writePolyData(polyData, relativePath, outputFormat = None):
         # if not append one 
         relativePathUsed = "%s.%s" % (relativePath, extension)
     
-    print('writting: %s'%relativePathUsed)
     if extension == "vtk":
         writer = vtk.vtkPolyDataWriter()
         writer.SetFileTypeToBinary()
@@ -90,6 +89,7 @@ def writePolyData(polyData, relativePath, outputFormat = None):
     writer.SetFileName(relativePathUsed)
     #writer.SetDataModeToAscii()
     writer.Write()
+    print('wrote vtk data file : %s'%relativePathUsed)
 
 
         

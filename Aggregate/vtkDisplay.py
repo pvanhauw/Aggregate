@@ -146,7 +146,7 @@ def RenderAndInteracte(polyData , config , VARIABLE , polyDataProbeLocation) :
     iren.SetRenderWindow(renWin)
 
     # append visualization of the probe location 
-    if not polyDataProbeLocation == None : 
+    if polyDataProbeLocation is not None : 
         mapMesh2 = vtk.vtkDataSetMapper()
         mapMesh2.SetInputData(polyDataProbeLocation) 
         meshActor2 = vtk.vtkActor()
@@ -157,7 +157,6 @@ def RenderAndInteracte(polyData , config , VARIABLE , polyDataProbeLocation) :
         ren.AddActor(meshActor2)
         print("append points ")
 
-   
     # Add the actors to the renderer, set the background and size
     ren.AddActor(meshActor)
     ren.SetBackground(0, 0, 0)

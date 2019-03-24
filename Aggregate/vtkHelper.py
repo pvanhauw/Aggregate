@@ -29,7 +29,6 @@ def concatenatePolyData(polyDataList, removeDupliatePoints):
     else:
         return appendFilter.GetOutput()
 
-
 def appendNormal(polyData, verbose, autoOrient):
     if verbose:
         print("create normals ...")
@@ -45,7 +44,6 @@ def appendNormal(polyData, verbose, autoOrient):
     normals.Update()
     polyData = normals.GetOutput()
     return polyData
-
 
 def getDataFrameAeroData(polyData, config):
     Narray = polyData.GetCellData().GetNumberOfArrays()
@@ -220,8 +218,8 @@ def ExtractDataFromTheClosestCellCenter( polyData ,  cvsFilePath) :
         points.append(point)
         closestPointDist =  vtk.reference(0.0) 
         testPoint = [ x ,y ,z ] 
-        id = kDTree.FindClosestPoint(testPoint, closestPointDist)
-        ids.append(id)
+        id0 = kDTree.FindClosestPoint(testPoint, closestPointDist)
+        ids.append(id0)
         print("closest point for point : (%8.8f , %8.8f, %8.8f) is point id : %d   Closest distance is : %s "%(x,y,z, id,  closestPointDist ) )
     # recover data based on the cell id.
     datas = [] 
@@ -233,7 +231,7 @@ def ExtractDataFromTheClosestCellCenter( polyData ,  cvsFilePath) :
         # print(croppedData.shape)
         # get ride of vect 
         if len(croppedData.shape ) == 1  :
-            print( "append variaoble : %s"% var )
+            print( "append variable : %s"% var )
             datas.append(croppedData)
             dict_new[var ] = croppedData
     # write data 

@@ -6,6 +6,7 @@ Created on Jan 19, 2019
 import math 
 import numpy as np 
 import vtk
+import AeroFrameAlphaBetaConvention
 
 def concatenatePolyData(polyDataList, removeDupliatePoints):
     print("concatenate the inputs...")
@@ -110,13 +111,13 @@ def rotation_matrix(axis, theta_rad):
 
 
 '''
-alpha and beta define angle applied for 2 rotations, one being carried out after the other, the order can be specied 
+alpha and beta define the rotation to go from the Solide reference frame to the aero refence frame 
 through the parameter alphaFirst 
 1) first  rotation is Ry(-alpha)
 2) second rotation is applied after the first one: Rz(-beta)  
 '''
-def GetForceVectorInAeroFrame( forceVector, alpha_deg, beta_deg, alpha_first):
-    R = GetRotationMatrixFromObjetFrameIntoAeroFrame(alpha_deg, beta_deg, alpha_first)
+def GetForceVectorInAeroFrame( forceVector, alpha_deg, beta_deg, aeroFrameAlphaBetaConvention ) :
+    R = GetRotationMatrixFromObjetFrameIntoAeroFrame(alpha_deg, beta_deg, aeroFrameAlphaBetaConvention)
     return np.dot(R, forceVector) 
 
 '''
@@ -125,15 +126,20 @@ through the parameter alphaFirst
 1) first  rotation is Ry(-alpha)
 2) second rotation is applied after the first one: Rz(-beta)  
 '''
-def GetRotationMatrixFromObjetFrameIntoAeroFrame(alpha_deg, beta_deg, alpha_first):
+def GetRotationMatrixFromObjetFrameIntoAeroFrame(alpha_deg, beta_deg, aeroFrameAlphaBetaConvention):
     # rotation of -alpha around oy 
     Ry = rotation_matrix( [0, 1, 0], math.radians(-alpha_deg ))
     # rotation of -beta around oz
-    Rz = rotation_matrix( [0, 0, 1], math.radians(-beta_deg ))
-    if alpha_first :
-        R = np.matmul(Rz, Ry) 
+    Rzm = rotation_matrix( [0, 0, 1], math.radians(-beta_deg ))
+    # rotation of -beta around oz
+    Rzp = rotation_matrix( [0, 0, 1], math.radians(beta_deg ))
+    if aeroFrameAlphaBetaConvention == AeroFrameAlphaBetaConvention.AeroFrameAlphaBetaConvention.SO3_minusBeta_minusAlpha :
+        R = np.matmul(Rzm, Ry) 
+    elif aeroFrameAlphaBetaConvention == AeroFrameAlphaBetaConvention.AeroFrameAlphaBetaConvention.SO3_plusBeta_minusAlpha :
+        R = np.matmul(Rzp, Ry) 
     else : 
-        R = np.matmul(Ry, Rz) 
+        print("Undefined ot not implemented aeroFrameAlphaBetaConvention: %s"%aeroFrameAlphaBetaConvention)
+        exit(2) 
     return R 
 
 

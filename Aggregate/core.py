@@ -5,7 +5,6 @@ Created on Jan 19, 2019
 '''
 import os 
 import argparse
-import math 
 import vtkDisplay
 import vtkTransform
 import vtkIO 
@@ -14,6 +13,7 @@ import integrate
 import cProfile
 import pstats
 import io
+import AeroFrameAlphaBetaConvention
 #https://www.programcreek.com/python/example/108192/vtk.util.numpy_support.vtk_to_numpy
             
 class Config(object):
@@ -44,7 +44,7 @@ class Config(object):
         self.Lref = args.Lref 
         self.no_write_vtk = args.no_write_vtk
         # defaut choice for SRF -> ARF (Solid Reference Frame -> Aero Reference Frame)
-        self.alpha_first = False 
+        self.aeroframeAlphaBetaConvention = AeroFrameAlphaBetaConvention.AeroFrameAlphaBetaConvention.SO3_minusBeta_minusAlpha
     
     def IsPressureIntegrationPossible(self):
         possible = True 
@@ -183,8 +183,8 @@ def main():
         polyData = vtkIO.getPolyDataByLoadingFile(absolutePath , args.forceFormat )
         vtkDisplay.PrintDataArrays(polyData)
         # create and recover normals 
-        if config.DoIntegrate():
-            polyData = vtkHelper.appendNormal(polyData, config.verbose, config.autoOrient )
+        #if config.DoIntegrate():
+        polyData = vtkHelper.appendNormal(polyData, config.verbose, config.autoOrient )
         polyDataList.append(polyData)
     # 
     removeDupliatePoints = False 

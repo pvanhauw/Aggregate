@@ -108,7 +108,7 @@ def computeCoG(df):
 
 def ComputeIntegrationQOIsAllCells(df, config):
     # recover matrix for aeroframe transformation 
-    R = vtkTransform.GetRotationMatrixFromObjetFrameIntoAeroFrame(config.alpha_deg, config.beta_deg, config.alpha_first)
+    R = vtkTransform.GetRotationMatrixFromObjetFrameIntoAeroFrame(config.alpha_deg, config.beta_deg, config.aeroframeAlphaBetaConvention)
     xE1, yE1, zE1, xE2, yE2, zE2, xE3, yE3, zE3 = R[0,0], R[1,0], R[2,0], R[0,1], R[1,1], R[2,1], R[0,2], R[1,2], R[2,2]
     # https://realpython.com/fast-flexible-pandas/ 
     # PRESSURE 
@@ -302,12 +302,12 @@ def integrate(polyData, config ):
     print(df_integration)
     # save in csv line style 
     file_name = os.path.join( os.getcwd() , config.outPutName+".csv" )
-    print("write integration data in : %s"% file_name)
+    print("wrote integration data in : %s"% file_name)
     df_integration_lin = ConcateRow(df_integration   )
     df_integration_lin.to_csv(file_name, sep=';', encoding='utf-8')
     # save in xls column style
     file_name = os.path.join( os.getcwd() , config.outPutName+".xls" )
-    print("write integration data in : %s"% file_name)
+    print("wrote integration data in : %s"% file_name)
     df_integration.to_excel(file_name,  encoding='utf-8', sheet_name = "integration")
     
     # plot 

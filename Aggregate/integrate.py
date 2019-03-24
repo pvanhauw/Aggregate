@@ -8,6 +8,7 @@ import pandas as pd
 import vtk 
 #from Aggregate.geometry.Point import Point
 import numpy as np
+import vtkTransform
 
 from vtk.util.numpy_support import numpy_to_vtk, vtk_to_numpy
 #https://www.programcreek.com/python/example/108192/vtk.util.numpy_support.vtk_to_numpy
@@ -107,7 +108,8 @@ def computeCoG(df):
 
 def ComputeIntegrationQOIsAllCells(df, config):
     # recover matrix for aeroframe transformation 
-    xE1, yE1, zE1, xE2, yE2, zE2, xE3, yE3, zE3 = config.getE123xyz()
+    R = vtkTransform.GetRotationMatrixFromObjetFrameIntoAeroFrame(config.alpha_deg, config.beta_deg, config.alpha_first)
+    xE1, yE1, zE1, xE2, yE2, zE2, xE3, yE3, zE3 = R[0,0], R[1,0], R[2,0], R[0,1], R[1,1], R[2,1], R[0,2], R[1,2], R[2,2]
     # https://realpython.com/fast-flexible-pandas/ 
     # PRESSURE 
     if config.IsPressureIntegrationPossible() :
@@ -262,7 +264,7 @@ def plotIntegration(df, config):
     YS = [variable_to_plots ] 
     vals = list(CellOrientationXYZ.labels.values())
     i = 0
-    for j in range(len(YS)) : 
+    for j, Y in  enumerate(YS) : 
         Y = YS[j] 
         ax = axarr[i]
         df_display = df[Y].T["total"]

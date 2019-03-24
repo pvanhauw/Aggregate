@@ -20,7 +20,7 @@ class Test_AeroFrame(unittest.TestCase):
         beta_deg = 90.
         alpha_first = False
         res = vtkTransform.GetForceVectorInAeroFrame( forceVector, alpha_deg, beta_deg, alpha_first)
-        expectedRes =  [ 0, 1, 0 ]
+        expectedRes =  [ 0, -1, 0 ]
         #print(expectedRes)
         #print(res)
         for i in [0, 1, 2] :

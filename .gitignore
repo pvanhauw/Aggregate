@@ -3,4 +3,8 @@
 .pydevproject
 .settings/
 *.csv 
-
+*__init__.py
+*__pycache__
+.cache/
+build/
+.pytest_cache/

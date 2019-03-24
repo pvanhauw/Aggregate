@@ -3,7 +3,7 @@ Created on Jan 19, 2019
 
 @author: pierre
 '''
-import os, math 
+import math 
 import numpy as np 
 import vtk
 
@@ -112,23 +112,29 @@ def rotation_matrix(axis, theta_rad):
 '''
 alpha and beta define angle applied for 2 rotations, one being carried out after the other, the order can be specied 
 through the parameter alphaFirst 
+1) first  rotation is Ry(-alpha)
+2) second rotation is applied after the first one: Rz(-beta)  
 '''
 def GetForceVectorInAeroFrame( forceVector, alpha_deg, beta_deg, alpha_first):
+    R = GetRotationMatrixFromObjetFrameIntoAeroFrame(alpha_deg, beta_deg, alpha_first)
+    return np.dot(R, forceVector) 
+
+'''
+alpha and beta define angle applied for 2 rotations, one being carried out after the other, the order can be specied 
+through the parameter alphaFirst 
+1) first  rotation is Ry(-alpha)
+2) second rotation is applied after the first one: Rz(-beta)  
+'''
+def GetRotationMatrixFromObjetFrameIntoAeroFrame(alpha_deg, beta_deg, alpha_first):
     # rotation of -alpha around oy 
     Ry = rotation_matrix( [0, 1, 0], math.radians(-alpha_deg ))
     # rotation of -beta around oz
     Rz = rotation_matrix( [0, 0, 1], math.radians(-beta_deg ))
     if alpha_first :
-        forceVector_apply_first_rotation = np.dot(Ry , forceVector ) 
-        forceVector_apply_second_rotation = np.dot(Rz , forceVector_apply_first_rotation ) 
+        R = np.matmul(Rz, Ry) 
     else : 
-        forceVector_apply_first_rotation = np.dot(Rz , forceVector ) 
-        forceVector_apply_second_rotation = np.dot(Ry , forceVector_apply_first_rotation ) 
-    return forceVector_apply_second_rotation
-
-
-
-
+        R = np.matmul(Ry, Rz) 
+    return R 
 
 
 

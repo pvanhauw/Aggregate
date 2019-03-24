@@ -7,8 +7,6 @@ import os
 import vtk
 import vtkConvert
 
-# from vtk.util.numpy_support import numpy_to_vtk
-from vtk.util.numpy_support import vtk_to_numpy
 # https://www.programcreek.com/python/example/108192/vtk.util.numpy_support.vtk_to_numpy
 
 
@@ -40,7 +38,7 @@ def getPolyDataByLoadingFile(absolutePathName, fileExtention=""):
         # reader = vtk.vtkUnstructuredGridReader()
         reader = vtk.vtkXMLUnstructuredGridReader()
         # reader = vtk.vtkXMLReader()
-    elif fileExtention == 'pvd' or fileExtention == 'pvtu':
+    elif fileExtention in ['pvd', 'pvtu']:
         reader = vtk.vtkXMLPUnstructuredGridReader()
     elif fileExtention == 'vtp':
         reader = vtk.vtkPolyDataMapper()
@@ -66,21 +64,21 @@ def writePolyData(polyData, relativePath, outputFormat = None):
         # no extension found
         extension = defaultExtension
     # override extension 
-    if not outputFormat == None :
+    if outputFormat is not None :
         extension = defaultExtension
     # rename the file with the correct extension if possible
     if len( relativePath ) > 1 :
-        relativePathUsed = "%s.%s" % ("".join(relativePathBase[:-1]), outputFormat)
+        relativePathUsed = "%s.%s" % ("".join(relativePathBase[:-1]), extension)
     else :
         # if not append one 
-        relativePathUsed = "%s.%s" % (relativePath, outputFormat)
+        relativePathUsed = "%s.%s" % (relativePath, extension)
     
     print('writting: %s'%relativePathUsed)
-    if outputFormat == "vtk":
+    if extension == "vtk":
         writer = vtk.vtkPolyDataWriter()
         writer.SetFileTypeToBinary()
         '''
-    elif outputFormat == "vtu":
+    elif extension == "vtu":
         writer = vtk.vtkXMLUnstructuredGridWriter()
         uGrid = vtkConvert.polyData2Ugrid(polyData)
         '''

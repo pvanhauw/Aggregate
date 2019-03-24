@@ -5,15 +5,15 @@ Created on Jan 19, 2019
 '''
 import os 
 import argparse
-from argparse import RawTextHelpFormatter
-import vtk 
-#from Aggregate.geometry.Point import Point
-
+import math 
 import vtkDisplay
 import vtkTransform
 import vtkIO 
 import vtkHelper
 import integrate
+import cProfile
+import pstats
+import io
 #https://www.programcreek.com/python/example/108192/vtk.util.numpy_support.vtk_to_numpy
             
 class Config(object):
@@ -37,18 +37,19 @@ class Config(object):
         self.beta_deg = args.beta_deg
         self.autoOrient = args.autoOrient
         self.reverse_normal = args.reverse_normal
-        self.reverse_aero_convention = args.reverse_aero_convention
         self.varDict = varDict
         self.verbose = args.verbose
         self.outPutName = args.outPutName
         self.Sref = args.Sref 
         self.Lref = args.Lref 
         self.no_write_vtk = args.no_write_vtk
+        # defaut choice for SRF -> ARF (Solid Reference Frame -> Aero Reference Frame)
+        self.alpha_first = False 
     
     def IsPressureIntegrationPossible(self):
         possible = True 
         for var in self.pressureVars :
-            if not var in  self.varDict.keys():
+            if var not in  self.varDict.keys():
                 possible = False 
                 break 
         return possible
@@ -56,7 +57,7 @@ class Config(object):
     def IsViscousIntegrationPossible(self):
         possible = True 
         for var in self.ViscousVars :
-            if not var in  self.varDict.keys():
+            if  var not in  self.varDict.keys():
                 possible = False 
                 break 
         return possible
@@ -64,7 +65,7 @@ class Config(object):
     def IsHeatFluxIntegrationPossible(self):
         possible = True 
         for var in self.HeatVars :
-            if not var in  self.varDict.keys():
+            if var not in  self.varDict.keys():
                 possible = False 
                 break 
         return possible
@@ -72,16 +73,14 @@ class Config(object):
     def IsChemHeatFluxIntegrationPossible(self):
         possible = True 
         for var in self.HeatChemVars :
-            if not var in  self.varDict.keys():
+            if var not in  self.varDict.keys():
                 possible = False 
                 break 
         return possible
 
     def DoIntegrate(self):
-        if self.IsChemHeatFluxIntegrationPossible() or self.IsHeatFluxIntegrationPossible() or self.IsViscousIntegrationPossible() or self.IsPressureIntegrationPossible() :
-            return True 
-        else :
-            return False 
+        return bool(self.IsChemHeatFluxIntegrationPossible() or self.IsHeatFluxIntegrationPossible() or self.IsViscousIntegrationPossible() or self.IsPressureIntegrationPossible()) 
+        
     '''
     IJK 
         I = "C" always
@@ -108,45 +107,10 @@ class Config(object):
         QOIs.append("area")
         return QOIs 
 
-    def getE123xyz(self ) : 
-        import math 
-        alpha = math.radians(self.alpha_deg)
-        beta = math.radians(self.beta_deg)
-        if self.reverse_aero_convention:
-            xE1 =  math.cos( beta) * math.cos(alpha)
-            yE1 = -math.sin( beta )
-            zE1 =  math.cos(beta) * math.sin(alpha) 
-            xE2 = -math.cos( alpha) * math.sin(beta)
-            yE2 = +math.cos( beta)  
-            zE2 =  math.sin(alpha) * math.sin(beta) 
-            xE3 = -math.sin( alpha)
-            yE3 = 0 
-            zE3 = +math.cos( alpha)
-        else :
-            if (beta == 0 ) :
-                xE1 =  math.cos( beta) * math.cos(alpha)
-                yE1 =  -math.sin( beta) * math.cos(alpha)
-                zE1 =  math.sin(alpha)           
-                xE2 = +math.sin( beta)
-                yE2 = +math.cos( beta)
-                zE2 =  0 
-                xE3 = -math.cos( beta) * math.sin(alpha)
-                yE3 = +math.sin( beta) * math.sin(alpha)
-                zE3 =  math.cos(alpha) 
-            else  :
-                print ("convention std with beta non null not handled. Exit") 
-                exit(32) 
-        return xE1, yE1, zE1, xE2, yE2, zE2, xE3, yE3, zE3 
-
-
-import cProfile, pstats, io
-
 def profile(fnc):
     
     """A decorator that uses cProfile to profile a function"""
-    
     def inner(*args, **kwargs):
-        
         pr = cProfile.Profile()
         pr.enable()
         retval = fnc(*args, **kwargs)
@@ -160,9 +124,9 @@ def profile(fnc):
 
     return inner
 
-@profile
+#@profile
 def main(): 
-    parser = argparse.ArgumentParser(description='Read surface file and integrate pressure, friction and other (eg flux)\nElement can be concatenated together provided they have the similar data', formatter_class=RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(description='Read surface file and integrate pressure, friction and other (eg flux)\nElement can be concatenated together provided they have the similar data', formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-i", "--list_input", help="list of files" ,  nargs='+', type = str , default = [] ,   required = True  )  
     parser.add_argument("-f", "--forceFormat" , help="force the reader" , type = str , default = "") 
     parser.add_argument("-o", "--outPutName" , help="default name for output" , type = str , default = "output") 

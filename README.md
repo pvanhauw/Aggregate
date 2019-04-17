@@ -17,25 +17,27 @@ Python post processing tool based on vtk and pandas that:
 
 
 ## TODO
- - Finish readme and documentation (data extraction using a serie of point) 
- - Add more ways to defined the aerodynamic frame, as well as graphical representation. Only Ry(-alpha) o Rz(-beta) is supported. 
- - Add vizualisation for data point extraction 
- - Add more unit test: all least one for all the exemples 
+ -Finish readme and documentation (data extraction using a serie of point) 
+ -Add more ways to defined the aerodynamic frame, as well as graphical representation. Only Ry(-alpha) o Rz(-beta) is supported. 
+ -Add vizualisation for data point extraction 
+ -Add more unit test: all least one for all the exemples 
+ -Add axis representation 
+ -Document defaut (alpha, beta) transformation used to compute the coefficients 
 ## Exemples
 
 ### Integrate
 Input used in command line: 
-- 1 wall file 
-- variables used for integration.
-- Most defaut values are omitted in that exemple, [see Usage for detail](#usage) 
+-1 wall file 
+-variables used for integration.
+-Most defaut values are omitted in that exemple, [see Usage for detail](#usage) 
 
 ```
 python3 Aggregate/core.py -i data/xcore-F1000-0.vtk -Cp "Cp [-]"  -Cfx "Cfx [-]" -Cfy "Cfy [-]" -Cfz "Cfz [-]"  -q "Heat Flux: Net [W/m2]" -alpha 15 -beta 15 -Sref 9 
 ```
 
 Output:
- - xls file one file containing the concatenated data 
- - one file containing the concatenated data 
+ -xls file one file containing the concatenated data 
+ -one file containing the concatenated data 
 ```
 ...
 wrote integration data in : output.csv
@@ -70,7 +72,10 @@ python3 Aggregate/core.py -i  data/xcore-F1000-0.vtk data/xpanel*  -gl
 python3 Aggregate/core.py -i  data/xcore-F1000-0.vtk data/xpanel*  -gl  -glvar "Cp [-]" 
 ```
 
-The output.vtk file can also be viewed using Paravie <url>www.paraview.org</url>
+The output.vtk file can also be viewed using Paraview <url>www.paraview.org</url> 
+
+Interaction is possible using the vtk short cut <url>https://vtk.org/doc/nightly/html/classvtkInteractorStyle.html</url>
+
 #### output
 ```
 Available data

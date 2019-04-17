@@ -39,7 +39,8 @@ def appendNormal(polyData, verbose, autoOrient):
     normals.SetSplitting(0)
     if not autoOrient:
         normals.AutoOrientNormalsOn()
-        print("AutoOrientNormalsOn")
+        normals.SetAutoOrientNormals(True)
+        print("AutoOrientNormalsOn and SetAutoOrientNormals(True)")
     normals.ConsistencyOn()
     normals.Update()
     polyData = normals.GetOutput()

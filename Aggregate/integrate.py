@@ -30,7 +30,8 @@ class CellOrientationXYZ:
 def concatenatePolyData( polyDataList, removeDupliatePoints):
     print("concatenate the inputs...")
     #Append the meshes
-    appendFilter = vtk.vtkAppendPolyData()
+    appendFilter = vtk.vtkAppendFilter()
+    appendFilter.MergePointsOn()
     for polyData in polyDataList : 
         appendFilter.AddInputData(polyData)
     appendFilter.Update()

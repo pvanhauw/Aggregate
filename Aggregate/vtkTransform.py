@@ -8,22 +8,6 @@ import numpy as np
 import vtk
 import AeroFrameAlphaBetaConvention
 
-def concatenatePolyData(polyDataList, removeDupliatePoints):
-    print("concatenate the inputs...")
-    # Append the meshes
-    appendFilter = vtk.vtkAppendPolyData()
-    for polyData in polyDataList:
-        appendFilter.AddInputData(polyData)
-    appendFilter.Update()
-    # Remove any duplicate points.
-    if removeDupliatePoints:
-        print("removing the dupliated points...")
-        cleanFilter = vtk.vtkCleanPolyData()
-        cleanFilter.SetInputConnection(appendFilter.GetOutputPort())
-        cleanFilter.Update()
-        return cleanFilter.GetOutput()
-    else:
-        return appendFilter.GetOutput()
 
 # Apply a vtkTransform on a vtkPolyData and return a vtkPolyData
 def ApplyTransformationOnPolyData(polyData , transform): 
@@ -33,6 +17,7 @@ def ApplyTransformationOnPolyData(polyData , transform):
     transformFilter.Update() 
     return transformFilter.GetOutput()
 
+# TODO : also apply the transformation to Cfx/y/z if integratation is activated 
 # Apply a vtkTransform on a vtkPolyData and return a vtkPolyData
 def Transform(polyData , args ): 
     if not args.translate == [0., 0., 0.] :
@@ -90,7 +75,6 @@ def Transform(polyData , args ):
 
     return polyData
         
-
 # https://stackoverflow.com/questions/6802577/rotation-of-3d-vector
 # https://en.wikipedia.org/wiki/Euler%E2%80%93Rodrigues_formula 
 def rotation_matrix(axis, theta_rad):
@@ -107,7 +91,6 @@ def rotation_matrix(axis, theta_rad):
     return np.array([[aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
                      [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
                      [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
-
 
 
 '''
@@ -135,14 +118,16 @@ def GetRotationMatrixFromObjetFrameIntoAeroFrame(alpha_deg, beta_deg, aeroFrameA
     Rzp = rotation_matrix( [0, 0, 1], math.radians(beta_deg ))
     if aeroFrameAlphaBetaConvention == AeroFrameAlphaBetaConvention.AeroFrameAlphaBetaConvention.SO3_minusBeta_minusAlpha :
         R = np.matmul(Rzm, Ry) 
+    elif aeroFrameAlphaBetaConvention == AeroFrameAlphaBetaConvention.AeroFrameAlphaBetaConvention.SO3_minusAlpha_minusBeta :
+        R = np.matmul( Ry, Rzm ) 
     elif aeroFrameAlphaBetaConvention == AeroFrameAlphaBetaConvention.AeroFrameAlphaBetaConvention.SO3_plusBeta_minusAlpha :
         R = np.matmul(Rzp, Ry) 
+    elif aeroFrameAlphaBetaConvention == AeroFrameAlphaBetaConvention.AeroFrameAlphaBetaConvention.SO3_minusAlpha_plusBeta :
+        R = np.matmul(Ry, Rzp) 
     else : 
         print("Undefined ot not implemented aeroFrameAlphaBetaConvention: %s"%aeroFrameAlphaBetaConvention)
         exit(2) 
     return R 
-
-
 
 
 

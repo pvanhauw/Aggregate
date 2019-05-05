@@ -14,6 +14,7 @@ from vtk.util.numpy_support import numpy_to_vtk, vtk_to_numpy
 #https://www.programcreek.com/python/example/108192/vtk.util.numpy_support.vtk_to_numpy
 
 import vtkHelper
+import warnings
 
 # best practice based on enum
 # https://stackoverflow.com/questions/702834/whats-the-common-practice-for-enums-in-python
@@ -26,25 +27,6 @@ class CellOrientationXYZ:
     labels[Y_PLUS]  = "plusY"
     labels[Z_MINUS] = "minusZ"
     labels[Z_PLUS]  = "plusZ"
-
-def concatenatePolyData( polyDataList, removeDupliatePoints):
-    print("concatenate the inputs...")
-    #Append the meshes
-    appendFilter = vtk.vtkAppendFilter()
-    appendFilter.MergePointsOn()
-    for polyData in polyDataList : 
-        appendFilter.AddInputData(polyData)
-    appendFilter.Update()
-    # Remove any duplicate points.
-    if removeDupliatePoints :
-        print("removing the dupliated points...")
-        cleanFilter = vtk.vtkCleanPolyData() 
-        cleanFilter.SetInputConnection(appendFilter.GetOutputPort())
-        cleanFilter.Update()
-        return cleanFilter.GetOutput()
-    else :
-        return appendFilter.GetOutput()
-
 
 def getDataFrameAeroData (polyData, config ):
     Narray = polyData.GetCellData().GetNumberOfArrays()
@@ -236,9 +218,9 @@ def ConcateRow(df_integration ):
 def translateCenters(df, xcog, ycog, zcog):
     computeCoG(df)
     # account for CoG 
-    df["cx"] = df["cx"].apply(lambda x : x + xcog)
-    df["cy"] = df["cy"].apply(lambda x : x + ycog)
-    df["cz"] = df["cz"].apply(lambda x : x + zcog)
+    df["cx"] = df["cx"].values + np.ones(1) * xcog
+    df["cy"] = df["cy"].values + np.ones(1) * ycog
+    df["cz"] = df["cz"].values + np.ones(1) * zcog
     return df 
 
 def plotIntegration(df, config):
@@ -290,8 +272,10 @@ def integrate(polyData, config ):
     df_geo['direction'] = getOrientation(df_geo)
     df = pd.concat([df_aero, df_geo], axis = 1 )
     # append to polydata
+    warnings.simplefilter(action='ignore', category=FutureWarning)
     direction = numpy_to_vtk(df["direction"].values)
     direction.SetName("direction [-]")
+    warnings.resetwarnings()
     polyData.GetCellData().AddArray(direction)
     # integration
     df = ComputeIntegrationQOIsAllCells(df, config)
@@ -301,6 +285,7 @@ def integrate(polyData, config ):
     for x in list(df_integration) :
         print(x)
     print(df_integration)
+    print(df_integration.loc["total",["CD", "CDP","CDV", "CQ", "CQP", "CQV", "CL", "CLP", "CLV", "Q"]])
     # save in csv line style 
     file_name = os.path.join( os.getcwd() , config.outPutName+".csv" )
     print("wrote integration data in : %s"% file_name)

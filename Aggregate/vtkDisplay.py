@@ -5,7 +5,6 @@ Created on Jan 19, 2019
 '''
 import vtk 
 
-    
 def PrintDataArrays(polyData  ):
     Narray = polyData.GetCellData().GetNumberOfArrays()
     nameVars = [] 
@@ -118,7 +117,7 @@ def lookUpTable( lutNum , lookupStyle , reverse = False ):
     return lut 
     
 def RenderAndInteracte(polyData , config , VARIABLE , polyDataProbeLocation) : 
-    if isVariableInPolyDataCellData(polyData , VARIABLE )  : 
+    if isVariableInPolyDataCellData(polyData , VARIABLE )  :    
         polyData.GetCellData().SetActiveScalars(VARIABLE)
     mapMesh = vtk.vtkDataSetMapper()
     #mapMesh = vtk.vtkPolyDataMapper()
@@ -133,10 +132,10 @@ def RenderAndInteracte(polyData , config , VARIABLE , polyDataProbeLocation) :
         lut.SetRange(minvalue, maxvalue) 
         lut.Build()
         mapMesh.SetLookupTable(lut)
-
+    else : 
+        meshActor.GetProperty().SetRepresentationToWireframe()
     meshActor = vtk.vtkActor()
     meshActor.SetMapper(mapMesh)
-    #meshActor.GetProperty().SetRepresentationToWireframe()
 
     # Create the rendering window, renderer, and interactive renderer
     ren = vtk.vtkRenderer()
@@ -167,7 +166,6 @@ def RenderAndInteracte(polyData , config , VARIABLE , polyDataProbeLocation) :
         scalar_bar = vtk.vtkScalarBarActor()
         scalar_bar.SetOrientationToHorizontal()
         scalar_bar.SetLookupTable(lut)
-        
         # create the scalar_bar_widget
         scalar_bar_widget = vtk.vtkScalarBarWidget()
         scalar_bar_widget.SetInteractor(iren)
@@ -181,6 +179,4 @@ def RenderAndInteracte(polyData , config , VARIABLE , polyDataProbeLocation) :
     iren.Initialize()
     renWin.Render()
     iren.Start()
-        
-        
         

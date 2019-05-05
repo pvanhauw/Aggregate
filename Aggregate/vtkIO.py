@@ -9,8 +9,6 @@ import vtkConvert
 
 # https://www.programcreek.com/python/example/108192/vtk.util.numpy_support.vtk_to_numpy
 
-
-
 def getPolyDataByLoadingFile(absolutePathName, fileExtention=""):
     # test if file exists
     if not os.path.isfile(absolutePathName):
@@ -54,7 +52,6 @@ def getPolyDataByLoadingFile(absolutePathName, fileExtention=""):
     vtkPolyData =  vtkConvert.uGrid2PpolyData(output)
     return vtkPolyData
 
-
 def writePolyData(polyData, relativePath, outputFormat = None):
     defaultExtension = "vtk"
     relativePathBase = relativePath.split(".")
@@ -65,27 +62,27 @@ def writePolyData(polyData, relativePath, outputFormat = None):
         extension = defaultExtension
     # override extension 
     if outputFormat is not None :
-        extension = defaultExtension
+        extension =  outputFormat
     # rename the file with the correct extension if possible
     if len( relativePath ) > 1 :
-        relativePathUsed = "%s.%s" % ("".join(relativePathBase[:-1]), extension)
+        base = ".".join(relativePathBase[:-1]) 
+        relativePathUsed = "%s.%s" % (base , extension)
     else :
         # if not append one 
         relativePathUsed = "%s.%s" % (relativePath, extension)
-    
+    #
     if extension == "vtk":
         writer = vtk.vtkPolyDataWriter()
         writer.SetFileTypeToBinary()
-        '''
+        inputObject = polyData
     elif extension == "vtu":
         writer = vtk.vtkXMLUnstructuredGridWriter()
-        uGrid = vtkConvert.polyData2Ugrid(polyData)
-        '''
+        ug = vtkConvert.getUgridFromPolyData(polyData)
+        inputObject = ug 
     else:
         raise Exception(
-            #'Output type ({:s}) unknowed. Type must be either "ply", "stl", "vtk", "vtu", "vtp", "tria" '.format(outputFormat))
-            'Output type ({:s}) unknowed. Type must be either "stl", "vtk", "vtu", "vtp", "tria" '.format(outputFormat))
-    writer.SetInputData(polyData)
+            'Output type ({:s}) unknowed. Type must be either "vtk", "vtu" '.format(outputFormat))
+    writer.SetInputData(inputObject )
     writer.SetFileName(relativePathUsed)
     #writer.SetDataModeToAscii()
     writer.Write()

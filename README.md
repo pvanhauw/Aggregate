@@ -18,11 +18,12 @@ Python post processing tool based on vtk and pandas that:
 
 ## TODO
  -Finish readme and documentation (data extraction using a serie of point) 
- -Add more ways to defined the aerodynamic frame, as well as graphical representation. Only Ry(-alpha) o Rz(-beta) is supported. 
+ -Add selection input for defining the aerodynamic frame, as well as graphical representation. f(x) : x -> Rz(-beta) o Ry(-alpha) (x) is the rotation to define the couple (AoA,AoS).
  -Add vizualisation for data point extraction 
  -Add more unit test: all least one for all the exemples 
- -Add axis representation 
+ -Add axis representation
  -Document defaut (alpha, beta) transformation used to compute the coefficients 
+ -Apply the geometric transformation also to friction coefficient when the integration is enable
 ## Exemples
 
 ### Integrate
@@ -157,7 +158,7 @@ usage: core.py [-h] -i LIST_INPUT [LIST_INPUT ...] [-f FORCEFORMAT]
 | -alpha | Angle of attack [deg] | 0 | integration |
 | -beta | Angle of side-slip [deg]| 0 | integration |
 | -cog | Coordinate of the center of gravity used to compute the moment | 0. ,0. ,0.  | integration |
-| -noAutoOrient| Do not auto orient the surface of the triangle for every single input file individually (vtk AutoOrientNormalsOn) | disable | integration |
+| -noAutoOrient| Do not auto orient the surface of the triangle for every single input file individually: only useful if surface is not manifold | disable | integration |
 | -reverse_normal | Reverse the orientation of the normals | disable | integration |
 | -o | Base name of the output file: .csv, .xls, .vtk, .png | output | data manipulation |
 | -k | List of variable to keep in the output |  | data manipulation |

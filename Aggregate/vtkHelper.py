@@ -6,42 +6,84 @@ Created on Jan 19, 2019
 import os
 import pandas as pd
 import vtk
+import vtkConvert 
 
 # from vtk.util.numpy_support import numpy_to_vtk
 from vtk.util.numpy_support import vtk_to_numpy
 # https://www.programcreek.com/python/example/108192/vtk.util.numpy_support.vtk_to_numpy
 
+def errorNonManifoldSurface():
+    raise ValueError("Surface is not manifold")
+
+def IsManifold(polyData ):
+    featureEdges = vtk.vtkFeatureEdges()
+    featureEdges.SetInputData(polyData)
+    featureEdges.BoundaryEdgesOn() # <--- 
+    featureEdges.FeatureEdgesOff()
+    featureEdges.ManifoldEdgesOff()
+    featureEdges.NonManifoldEdgesOn() # <--- 
+    featureEdges.Update()
+    poly = featureEdges.GetOutput()
+    N = poly.GetNumberOfCells()
+    if N == 0 : 
+        return True
+    else :
+        print(poly)
+    return False 
+
+def writePolyData(polyData, relativePath ):
+    writer = vtk.vtkPolyDataWriter()
+    #writer.SetFileTypeToBinary()
+    writer.SetInputData(polyData)
+    writer.SetFileName(relativePath)
+    writer.Write()
+    print('wrote vtk data file : %s'%relativePath)
+
 
 def concatenatePolyData(polyDataList, removeDupliatePoints):
     print("concatenate the inputs...")
     # Append the meshes
-    appendFilter = vtk.vtkAppendPolyData()
+    #appendFilter = vtk.vtkAppendPolyData()
+    appendFilter = vtk.vtkAppendFilter()
     for polyData in polyDataList:
-        appendFilter.AddInputData(polyData)
+        appendFilter.AddInputData( polyData ) 
+    #appendFilter.MergePointsOn()
     appendFilter.Update()
+    ug = appendFilter.GetOutput()
+    polyMerge = vtkConvert.uGrid2PpolyData(ug)
     # Remove any duplicate points.
     if removeDupliatePoints:
-        print("removing the dupliated points...")
+        print("removing the dupliated points... (read vtkCleanPolyData for details...)")
         cleanFilter = vtk.vtkCleanPolyData()
-        cleanFilter.SetInputConnection(appendFilter.GetOutputPort())
+        cleanFilter.SetInputData(polyMerge)
         cleanFilter.Update()
         return cleanFilter.GetOutput()
-    else:
-        return appendFilter.GetOutput()
+    return polyMerge
 
 def appendNormal(polyData, verbose, autoOrient):
+    if autoOrient:
+        cleanFilter = vtk.vtkCleanPolyData()
+        cleanFilter.SetInputData(polyData) 
+        #cleanFilter.SetTolerance(1e-7)
+        #cleanFilter.PointMergingOn()
+        cleanFilter.Update()
+        poly2 = cleanFilter.GetOutput()
+        if not IsManifold(poly2) :
+            raise RuntimeError('Error in concatenatePolyData') from errorNonManifoldSurface(); 
+        polyData = poly2 
     if verbose:
         print("create normals ...")
     # create normals
     normals = vtk.vtkPolyDataNormals()
     normals.SetInputData(polyData)
     normals.ComputeCellNormalsOn()
-    normals.SetSplitting(0)
-    if not autoOrient:
+    normals.ComputePointNormalsOn()
+    normals.SetSplitting(180)
+    if autoOrient:
         normals.AutoOrientNormalsOn()
         normals.SetAutoOrientNormals(True)
+        normals.ConsistencyOn()
         print("AutoOrientNormalsOn and SetAutoOrientNormals(True)")
-    normals.ConsistencyOn()
     normals.Update()
     polyData = normals.GetOutput()
     return polyData
@@ -106,10 +148,10 @@ def getDataFrameGeo(polyData, verbose, reverse_normal):
     #
     if verbose:
         print("recover triangle centers...")
-    normals = polyData.GetCellData().GetArray("Normals")
-    normals = vtk_to_numpy(normals)
+    normalExts = polyData.GetCellData().GetArray("Normals")
+    normalExts = vtk_to_numpy(normalExts)
     if not reverse_normal:
-        normals *= -1.
+        normalExts *= -1.
     #
     cells = polyData.GetPolys()
     nbOfCells = cells.GetNumberOfCells()
@@ -130,9 +172,9 @@ def getDataFrameGeo(polyData, verbose, reverse_normal):
         centers_z.append(center[2])
     dict_new = {
         'area': areas,
-        'nx': normals[:, 0],
-        'ny': normals[:, 1],
-        'nz': normals[:, 2],
+        'nx': normalExts[:, 0],
+        'ny': normalExts[:, 1],
+        'nz': normalExts[:, 2],
         'cx': centers_x,
         'cy': centers_y,
         'cz': centers_z,

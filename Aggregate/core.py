@@ -7,6 +7,7 @@ import os
 import argparse
 import vtkDisplay
 import vtkTransform
+import vtkConvert
 import vtkIO 
 import vtkHelper
 import integrate
@@ -35,7 +36,7 @@ class Config(object):
         self.zcog = args.cog[2]
         self.alpha_deg = args.alpha_deg
         self.beta_deg = args.beta_deg
-        self.autoOrient = args.autoOrient
+        self.autoOrient = not args.noAutoOrient
         self.reverse_normal = args.reverse_normal
         self.varDict = varDict
         self.verbose = args.verbose
@@ -44,7 +45,7 @@ class Config(object):
         self.Lref = args.Lref 
         self.no_write_vtk = args.no_write_vtk
         # defaut choice for SRF -> ARF (Solid Reference Frame -> Aero Reference Frame)
-        self.aeroframeAlphaBetaConvention = AeroFrameAlphaBetaConvention.AeroFrameAlphaBetaConvention.SO3_minusBeta_minusAlpha
+        self.aeroframeAlphaBetaConvention = AeroFrameAlphaBetaConvention.AeroFrameAlphaBetaConvention.SO3_minusAlpha_minusBeta
     
     def IsPressureIntegrationPossible(self):
         possible = True 
@@ -144,7 +145,7 @@ def main():
     parser.add_argument("-Lref", help="reference length" , type = float , default = 1. ) 
     parser.add_argument("-reverse_normal",  help="reverse normal (multiply all by -1)",action="store_true") 
     parser.add_argument("-reverse_aero_convention",  help="TODO",action="store_true") 
-    parser.add_argument("-autoOrient", "--autoOrient", help="used autoorient feature from VTK ",action="store_false") 
+    parser.add_argument("-noAutoOrient", "--noAutoOrient", help="disable used autoorient feature from VTK ",action="store_true") 
     parser.add_argument("-t", "--translate" , nargs=3, metavar=('tx', 'ty', 'tz'), help="translate by (tx, ty, tz)", type=float, default=[0., 0., 0.] , required = False )
     parser.add_argument("-r", "--rotate", nargs=9, metavar=('r11', 'r12', 'r13','r21', 'r22', 'r23','r31', 'r32', 'r33',), 
                         help="Apply R * X, with [r11 r12 r13, r21 r22 r23, r31 r32 r33]", type=float, default=[1., 0., 0., 0., 1., 0., 0., 0., 1.] , required = False )
@@ -172,15 +173,17 @@ def main():
         varDict["q"] = args.q
     if args.qd != "" :
         varDict["qd"] = args.qd
-    print("used autoOrient : %s"%args.autoOrient )
-    print("used reverse_normal : %s"%args.reverse_normal )
     config = Config( args,  varDict  )
+    print("used autoOrient : %s"%config.autoOrient )
+    print("used reverse_normal : %s"%config.reverse_normal )
     
     # concatenate data while computing normals individually for each files 
     polyDataList = []
     for relativePath in list_input :
         absolutePath = os.path.join(cwd, relativePath)
         polyData = vtkIO.getPolyDataByLoadingFile(absolutePath , args.forceFormat )
+        # triangulate 
+        polyData = vtkConvert.triangulate(polyData)
         vtkDisplay.PrintDataArrays(polyData)
         # create and recover normals 
         #if config.DoIntegrate():

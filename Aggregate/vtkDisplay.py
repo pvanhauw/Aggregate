@@ -132,10 +132,10 @@ def RenderAndInteracte(polyData , config , VARIABLE , polyDataProbeLocation) :
         lut.SetRange(minvalue, maxvalue) 
         lut.Build()
         mapMesh.SetLookupTable(lut)
-    else : 
-        meshActor.GetProperty().SetRepresentationToWireframe()
     meshActor = vtk.vtkActor()
     meshActor.SetMapper(mapMesh)
+    if not isVariableInPolyDataCellData(polyData , VARIABLE )  : 
+        meshActor.GetProperty().SetRepresentationToWireframe()
 
     # Create the rendering window, renderer, and interactive renderer
     ren = vtk.vtkRenderer()
@@ -146,6 +146,19 @@ def RenderAndInteracte(polyData , config , VARIABLE , polyDataProbeLocation) :
 
     # append visualization of the probe location 
     if polyDataProbeLocation is not None : 
+        #  Generate the label hierarchy.
+        pointSetToLabelHierarchyFilter = vtk.vtkPointSetToLabelHierarchy()
+        pointSetToLabelHierarchyFilter.SetInputData(polyDataProbeLocation)
+        pointSetToLabelHierarchyFilter.SetLabelArrayName("labels")
+        pointSetToLabelHierarchyFilter.SetPriorityArrayName("sizes")
+        pointSetToLabelHierarchyFilter.Update()
+
+        labelMapper = vtk.vtkLabelPlacementMapper ()
+        labelMapper.SetInputConnection(pointSetToLabelHierarchyFilter.GetOutputPort())
+        labelActor = vtk.vtkActor2D()
+        labelActor.SetMapper(labelMapper)
+        ren.AddActor(labelActor)
+
         mapMesh2 = vtk.vtkDataSetMapper()
         mapMesh2.SetInputData(polyDataProbeLocation) 
         meshActor2 = vtk.vtkActor()

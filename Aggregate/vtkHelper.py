@@ -253,17 +253,22 @@ def ExtractDataFromTheClosestCellCenter( polyData ,  cvsFilePath) :
     # TODO check header variables : existence of x y z 
     ids = []
     points = []
+    vtkStringArray = vtk.vtkStringArray()
+    vtkStringArray.SetNumberOfValues(df.shape[0])
+    vtkStringArray.SetName("labels")
     for index, row in df.iterrows():
         x = row['x [m]']
         y = row['y [m]']
         z = row['z [m]']
+        tag = row['label']
+        vtkStringArray.SetValue(index, tag)
         point = [x , y , z ]
         points.append(point)
         closestPointDist =  vtk.reference(0.0) 
         testPoint = [ x ,y ,z ] 
         id0 = kDTree.FindClosestPoint(testPoint, closestPointDist)
         ids.append(id0)
-        print("closest point for point : (%8.8f , %8.8f, %8.8f) is point id : %d   Closest distance is : %s "%(x,y,z, id,  closestPointDist ) )
+        print("%5s closest point for point : (%8.8f , %8.8f, %8.8f) is point id : %d Closest distance is : %s "%(tag, x,y,z, id0,  closestPointDist ) )
     # recover data based on the cell id.
     datas = [] 
     dict_new = {}
@@ -282,6 +287,8 @@ def ExtractDataFromTheClosestCellCenter( polyData ,  cvsFilePath) :
     df_appened = pd.concat([df, df_to_append ] , axis = 1 ) 
     filename = "interpolation.csv"
     df_appened.to_csv(filename ) 
+    filename2 = "interpolation-transposed.csv"
+    df_appened.T.to_csv(filename2 ) 
     print("wrote interpolated data info : %s"%filename)
         
     vtkPoints = vtk.vtkPoints()
@@ -293,6 +300,7 @@ def ExtractDataFromTheClosestCellCenter( polyData ,  cvsFilePath) :
     polyDataProbeLocation = vtk.vtkPolyData()
     polyDataProbeLocation.SetPoints(vtkPoints)
     polyDataProbeLocation.SetVerts(vertices)
+    polyDataProbeLocation.GetPointData().AddArray(vtkStringArray)
     return polyDataProbeLocation
         
     

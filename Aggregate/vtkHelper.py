@@ -246,6 +246,7 @@ def ExtractDataFromTheClosestCellCenter( polyData ,  cvsFilePath) :
         centers_z.append(center[2])
     # look up for closest point based on cell CoG
     kDTree = vtk.vtkKdTree()
+    kDTree.SetTolerance(1e-8)
     points = vtk.vtkPoints()
     for i in range ( 0, nbOfCells )  : # TODO : this is slow, use numpy array instead 
         points.InsertNextPoint(centers_x[i], centers_y[i] , centers_z[i])

@@ -101,12 +101,12 @@ def ComputeIntegrationQOIsAllCells(df, config):
         df["CxP"] = df["Cp"] * df["nx"] * df["area"] / config.Sref
         df["CyP"] = df["Cp"] * df["ny"] * df["area"] / config.Sref
         df["CzP"] = df["Cp"] * df["nz"] * df["area"] / config.Sref
-        df["ClP"] = (df["cy"] * df["CzP"] - df["cz"] * df["CyP"] ) / config.Sref / config.Lref
-        df["CmP"] = (df["cz"] * df["CxP"] - df["cx"] * df["CzP"] ) / config.Sref / config.Lref
-        df["CnP"] = (df["cx"] * df["CyP"] - df["cy"] * df["CxP"] ) / config.Sref / config.Lref
-        df["CDP"] = (df["CxP"] * xE1 + df["CyP"] * yE1 + df["CzP"]* zE1 ) / config.Sref
-        df["CQP"] = (df["CxP"] * xE2 + df["CyP"] * yE2 + df["CzP"]* zE2 ) / config.Sref
-        df["CLP"] = (df["CxP"] * xE3 + df["CyP"] * yE3 + df["CzP"]* zE3 ) / config.Sref
+        df["ClP"] = (df["cy"] * df["CzP"] - df["cz"] * df["CyP"] ) / config.Lref
+        df["CmP"] = (df["cz"] * df["CxP"] - df["cx"] * df["CzP"] ) / config.Lref
+        df["CnP"] = (df["cx"] * df["CyP"] - df["cy"] * df["CxP"] ) / config.Lref
+        df["CDP"] = (df["CxP"] * xE1 + df["CyP"] * yE1 + df["CzP"]* zE1 ) 
+        df["CQP"] = (df["CxP"] * xE2 + df["CyP"] * yE2 + df["CzP"]* zE2 ) 
+        df["CLP"] = (df["CxP"] * xE3 + df["CyP"] * yE3 + df["CzP"]* zE3 ) 
     # VISCOUS 
     if config.IsViscousIntegrationPossible() :
         if config.verbose :
@@ -114,12 +114,12 @@ def ComputeIntegrationQOIsAllCells(df, config):
         df["CxV"] = df["Cfx"] * df["area"] / config.Sref
         df["CyV"] = df["Cfy"] * df["area"] / config.Sref
         df["CzV"] = df["Cfz"] * df["area"] / config.Sref
-        df["ClV"] = (df["cy"] * df["Cfz"] - df["cz"] * df["Cfy"] ) * df["area"] / config.Sref / config.Lref
-        df["CmV"] = (df["cz"] * df["Cfx"] - df["cx"] * df["Cfz"] ) * df["area"] / config.Sref / config.Lref
-        df["CnV"] = (df["cx"] * df["Cfy"] - df["cy"] * df["Cfx"] ) * df["area"] / config.Sref / config.Lref
-        df["CDV"] = df["CxV"] * xE1 + df["CyV"] * yE1 + df["CzV"]* zE1 / config.Sref
-        df["CQV"] = df["CxV"] * xE2 + df["CyV"] * yE2 + df["CzV"]* zE2 / config.Sref
-        df["CLV"] = df["CxV"] * xE3 + df["CyV"] * yE3 + df["CzV"]* zE3 / config.Sref
+        df["ClV"] = (df["cy"] * df["CzV"] - df["cz"] * df["CyV"] ) / config.Lref
+        df["CmV"] = (df["cz"] * df["CxV"] - df["cx"] * df["CzV"] ) / config.Lref
+        df["CnV"] = (df["cx"] * df["CyV"] - df["cy"] * df["CxV"] ) / config.Lref
+        df["CDV"] = df["CxV"] * xE1 + df["CyV"] * yE1 + df["CzV"]* zE1
+        df["CQV"] = df["CxV"] * xE2 + df["CyV"] * yE2 + df["CzV"]* zE2
+        df["CLV"] = df["CxV"] * xE3 + df["CyV"] * yE3 + df["CzV"]* zE3
     # TOTAL
     if config.IsPressureIntegrationPossible() or config.IsViscousIntegrationPossible() :
         for j in config.infixes : 
